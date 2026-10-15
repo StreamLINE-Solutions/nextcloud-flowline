@@ -49,6 +49,14 @@ docker compose -f dev/docker-compose.yml exec -u www-data nextcloud \
 The app targets Nextcloud 33 to 36 (PHP 8.2+); for multi-version testing see
 [nextcloud-docker-dev](https://github.com/nextcloud/nextcloud-docker-dev).
 
+### CI
+
+GitHub Actions workflows come from the app template, with one local
+adaptation: the template uses the runner label `ubuntu-latest-low`, which only
+exists on Nextcloud's internal runners. It is replaced here by the standard
+`ubuntu-latest` label — otherwise those jobs stay queued forever outside the
+Nextcloud organisation (observed 2026-10-15: 56 runs stuck).
+
 ## Releases
 
 Releases are signed and published to the
