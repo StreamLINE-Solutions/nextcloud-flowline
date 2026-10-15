@@ -37,15 +37,27 @@ npm run watch             # development build, watches for changes
 
 ### Testing against a Nextcloud instance
 
-Install the repository into a Nextcloud dev instance as `apps/flowline`
-(e.g. with [nextcloud-docker-dev](https://github.com/nextcloud/nextcloud-docker-dev)),
-then enable the app. The app targets Nextcloud 33 to 36 (PHP 8.2+).
+A ready-to-use dev instance is included:
+
+```sh
+docker compose -f dev/docker-compose.yml up -d
+docker compose -f dev/docker-compose.yml exec -u www-data nextcloud \
+  php occ app:enable flowline
+```
+
+→ http://localhost:18080 — see [`dev/README.md`](dev/README.md) for details.
+The app targets Nextcloud 33 to 36 (PHP 8.2+); for multi-version testing see
+[nextcloud-docker-dev](https://github.com/nextcloud/nextcloud-docker-dev).
 
 ## Releases
 
 Releases are signed and published to the
 [Nextcloud app store](https://apps.nextcloud.com). Built frontend assets
 (`js/`, `css/`) are generated at package time and are not committed.
+
+Publishing is automated: publishing a GitHub release builds, packages and
+pushes the app to the store — see [`dev/README.md`](dev/README.md) for the
+workflow and the required secrets.
 
 ## Links
 
