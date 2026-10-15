@@ -2,8 +2,8 @@
     "openapi": "3.0.3",
     "info": {
         "title": "flowline",
-        "version": "0.1.0",
-        "description": "FlowLINE brings your remote support workspace into Nextcloud. Link your FlowLINE account, see your machines and sessions, invite a computer and receive notifications — without leaving your Nextcloud. Requires a FlowLINE account and connects only to the FlowLINE API you configure.",
+        "version": "0.0.1",
+        "description": "Remote support from your Nextcloud",
         "license": {
             "name": "AGPL-3.0-or-later"
         }
