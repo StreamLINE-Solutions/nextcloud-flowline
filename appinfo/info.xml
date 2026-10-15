@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	  xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>flowline</id>
+	<name>FlowLINE</name>
+	<summary lang="en">Remote support from your Nextcloud</summary>
+	<summary lang="fr">Télémaintenance depuis votre Nextcloud</summary>
+	<description lang="en">FlowLINE brings your remote support workspace into Nextcloud. Link your FlowLINE account, see your machines and sessions, invite a computer and receive notifications — without leaving your Nextcloud. Requires a FlowLINE account and connects only to the FlowLINE API you configure.</description>
+	<description lang="fr">FlowLINE amène votre espace de télémaintenance dans Nextcloud. Liez votre compte FlowLINE, consultez vos machines et sessions, invitez un poste et recevez les notifications — sans quitter votre Nextcloud. Nécessite un compte FlowLINE et se connecte uniquement à l'API FlowLINE que vous configurez.</description>
+	<version>0.1.0</version>
+	<licence>AGPL-3.0-or-later</licence>
+	<author mail="contact@streamline-solutions.ch" homepage="https://flowline.support">StreamLINE-Solutions Sàrl</author>
+	<namespace>Flowline</namespace>
+	<category>tools</category>
+	<website>https://flowline.support</website>
+	<bugs>https://github.com/StreamLINE-Solutions/nextcloud-flowline/issues</bugs>
+	<repository>https://github.com/StreamLINE-Solutions/nextcloud-flowline</repository>
+	<dependencies>
+		<nextcloud min-version="33" max-version="36"/>
+	</dependencies>
+	<navigations>
+		<navigation>
+			<id>flowline</id>
+			<name>FlowLINE</name>
+			<route>flowline.page.index</route>
+			<icon>app.svg</icon>
+			<type>link</type>
+		</navigation>
+	</navigations>
+</info>
