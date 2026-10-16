@@ -74,6 +74,7 @@ const error = ref('')
 const linked = ref(false)
 const account = ref<AccountInfo | null>(null)
 const apiUrl = ref('')
+const activeTab = ref<'support' | 'sessions' | 'account'>('support')
 
 const machinesLoading = ref(false)
 const machinesError = ref('')
@@ -396,17 +397,7 @@ function invitationStatus(invitation: Invitation): string {
 				</NcEmptyContent>
 				<template v-else-if="account">
 					<div class="flowline-header">
-						<div>
-							<h2>FlowLINE</h2>
-							<p>
-								{{ t('flowline', 'Linked account:') }}
-								<strong>{{ account.display_name }}</strong>
-								({{ account.username }} — {{ account.plan_name }})
-							</p>
-							<p class="flowline-hint">
-								{{ t('flowline', 'Connected to {url}', { url: apiUrl }) }}
-							</p>
-						</div>
+						<h2>FlowLINE</h2>
 						<NcButton :disabled="busy" @click="refresh">
 							{{ t('flowline', 'Refresh') }}
 						</NcButton>
@@ -419,7 +410,22 @@ function invitationStatus(invitation: Invitation): string {
 						</NcButton>
 					</NcNoteCard>
 
-					<section class="flowline-section">
+					<div class="flowline-tabs">
+						<NcButton :variant="activeTab === 'support' ? 'primary' : 'tertiary'"
+							@click="activeTab = 'support'">
+							{{ t('flowline', 'Support') }}
+						</NcButton>
+						<NcButton :variant="activeTab === 'sessions' ? 'primary' : 'tertiary'"
+							@click="activeTab = 'sessions'">
+							{{ t('flowline', 'Recent connections') }}
+						</NcButton>
+						<NcButton :variant="activeTab === 'account' ? 'primary' : 'tertiary'"
+							@click="activeTab = 'account'">
+							{{ t('flowline', 'Linked account') }}
+						</NcButton>
+					</div>
+
+					<section v-show="activeTab === 'support'" class="flowline-section">
 						<h3>
 							{{ t('flowline', 'Machines') }}
 							<span v-if="machinesTotal > 0" class="flowline-count">{{ machinesTotal }}</span>
@@ -444,7 +450,7 @@ function invitationStatus(invitation: Invitation): string {
 						</ul>
 					</section>
 
-					<section class="flowline-section">
+					<section v-show="activeTab === 'sessions'" class="flowline-section">
 						<h3>{{ t('flowline', 'Sessions') }}</h3>
 						<NcLoadingIcon v-if="sessionsLoading" :size="32" />
 						<NcNoteCard v-else-if="sessionsError !== ''" type="error">
@@ -486,7 +492,7 @@ function invitationStatus(invitation: Invitation): string {
 						</template>
 					</section>
 
-					<section class="flowline-section">
+					<section v-show="activeTab === 'support'" class="flowline-section">
 						<h3>{{ t('flowline', 'Support') }}</h3>
 						<NcLoadingIcon v-if="invitationsLoading" :size="32" />
 						<template v-else>
@@ -540,6 +546,25 @@ function invitationStatus(invitation: Invitation): string {
 							</ul>
 						</template>
 					</section>
+
+					<section v-show="activeTab === 'account'" class="flowline-section">
+						<h3>{{ t('flowline', 'Linked account') }}</h3>
+						<ul class="flowline-list">
+							<li class="flowline-row">
+								<span class="flowline-primary">{{ account.display_name }}</span>
+								<span class="flowline-meta">{{ account.username }}</span>
+								<span class="flowline-meta flowline-right">{{ account.plan_name }}</span>
+							</li>
+						</ul>
+						<p class="flowline-hint">
+							{{ t('flowline', 'Connected to {url}', { url: apiUrl }) }}
+						</p>
+						<div class="flowline-actions">
+							<NcButton :href="settingsUrl" variant="primary">
+								{{ t('flowline', 'Open settings') }}
+							</NcButton>
+						</div>
+					</section>
 				</template>
 			</div>
 		</NcAppContent>
@@ -558,6 +583,13 @@ function invitationStatus(invitation: Invitation): string {
 	align-items: flex-start;
 	justify-content: space-between;
 	gap: 16px;
+}
+
+.flowline-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 16px;
 }
 
 .flowline-hint {
