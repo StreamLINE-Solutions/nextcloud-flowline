@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import axios from '@nextcloud/axios'
 import { formatRelativeTime, translate as t } from '@nextcloud/l10n'
 import { generateOcsUrl, generateUrl } from '@nextcloud/router'
@@ -99,6 +99,27 @@ const busy = computed(() => machinesLoading.value || sessionsLoading.value || in
 
 const settingsUrl = generateUrl('/settings/user/flowline')
 
+let pollTimer: ReturnType<typeof setInterval> | null = null
+
+// Une fenêtre support active peut recevoir la connexion du module à tout
+// moment : on rafraîchit régulièrement pour voir le poste et ses sessions
+// apparaître sans action manuelle.
+watch(invitations, () => {
+	if (invitations.value.length > 0 && pollTimer === null) {
+		pollTimer = setInterval(refresh, 30000)
+	} else if (invitations.value.length === 0 && pollTimer !== null) {
+		clearInterval(pollTimer)
+		pollTimer = null
+	}
+})
+
+onBeforeUnmount(() => {
+	if (pollTimer !== null) {
+		clearInterval(pollTimer)
+		pollTimer = null
+	}
+})
+
 onMounted(load)
 
 async function load(): Promise<void> {
@@ -186,7 +207,7 @@ async function openSupportWindow(): Promise<void> {
 		if (payload.window) {
 			supportFeedback.value = {
 				type: 'success',
-				text: t('flowline', 'Support window opened for {id} (expires {when}).', {
+				text: t('flowline', 'Support window opened for {id} (expires {when}). The machine appears in the Machines list once its module is connected.', {
 					id: payload.id,
 					when: relative(payload.expires_at),
 				}),
@@ -198,7 +219,7 @@ async function openSupportWindow(): Promise<void> {
 				text: t('flowline', 'This device already has a FlowLINE account — no support window is needed.'),
 			}
 		}
-		await loadInvitations()
+		await Promise.all([loadInvitations(), loadMachines(), loadSessions()])
 	} catch (e) {
 		supportFeedback.value = { type: 'error', text: describeSupportError(e) }
 	} finally {
@@ -214,7 +235,7 @@ async function endSupportWindow(invitation: Invitation): Promise<void> {
 			deviceId: invitation.device_id,
 		}))
 		supportFeedback.value = { type: 'success', text: t('flowline', 'Support window ended.') }
-		await loadInvitations()
+		await Promise.all([loadInvitations(), loadMachines(), loadSessions()])
 	} catch (e) {
 		supportFeedback.value = { type: 'error', text: describeSupportError(e) }
 	} finally {
