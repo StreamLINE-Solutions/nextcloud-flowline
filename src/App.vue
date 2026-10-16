@@ -351,11 +351,29 @@ function sessionEndedLabel(session: Session): string {
 	return length === '' ? started : `${started} · ${length}`
 }
 
-function invitationExpiry(invitation: Invitation): string {
-	const connected = invitation.last_conn_at !== null && invitation.last_conn_at !== ''
-		? t('flowline', 'Module connected {when}', { when: relative(invitation.last_conn_at) })
-		: t('flowline', 'Module not connected yet')
-	return `${connected} · ${t('flowline', 'expires {when}', { when: relative(invitation.expires_at) })}`
+function isModuleOnline(invitation: Invitation): boolean {
+	if (invitation.last_seen === null || invitation.last_seen === '') {
+		return false
+	}
+	const seen = parseUtc(invitation.last_seen)
+	// Tolerant : le serveur considere le module « present » sous 45 s de heartbeat.
+	return seen !== null && Date.now() - seen.getTime() < 90000
+}
+
+function invitationStatus(invitation: Invitation): string {
+	const parts: string[] = []
+	if (isModuleOnline(invitation)) {
+		parts.push(t('flowline', 'Module online'))
+	} else if (invitation.last_seen !== null && invitation.last_seen !== '') {
+		parts.push(t('flowline', 'Module offline ({when})', { when: relative(invitation.last_seen) }))
+	} else {
+		parts.push(t('flowline', 'Module never seen'))
+	}
+	parts.push(invitation.last_conn_at !== null && invitation.last_conn_at !== ''
+		? t('flowline', 'Session active')
+		: t('flowline', 'No support session yet'))
+	parts.push(t('flowline', 'expires {when}', { when: relative(invitation.expires_at) }))
+	return parts.join(' · ')
 }
 </script>
 
@@ -473,7 +491,7 @@ function invitationExpiry(invitation: Invitation): string {
 						<NcLoadingIcon v-if="invitationsLoading" :size="32" />
 						<template v-else>
 							<p class="flowline-hint">
-								{{ t('flowline', 'Give the support module link to the user, then open a window with the id shown by the module.') }}
+								{{ t('flowline', 'Give the support module link to the user, then open a window with the id shown by the module. Start the session from your FlowLINE client.') }}
 							</p>
 							<div class="flowline-actions">
 								<NcButton @click="copyModuleLink">
@@ -511,10 +529,10 @@ function invitationExpiry(invitation: Invitation): string {
 							</p>
 							<ul v-else class="flowline-list">
 								<li v-for="invitation in invitations" :key="invitation.device_id" class="flowline-row">
-									<span class="flowline-dot flowline-dot--online" />
+									<span class="flowline-dot" :class="{ 'flowline-dot--online': isModuleOnline(invitation) }" />
 									<span class="flowline-primary">{{ invitationName(invitation) }}</span>
 									<span class="flowline-meta">{{ invitation.device_id }}</span>
-									<span class="flowline-meta flowline-right">{{ invitationExpiry(invitation) }}</span>
+									<span class="flowline-meta flowline-right">{{ invitationStatus(invitation) }}</span>
 									<NcButton :disabled="!canInvite || supportBusy" @click="endSupportWindow(invitation)">
 										{{ t('flowline', 'End') }}
 									</NcButton>
