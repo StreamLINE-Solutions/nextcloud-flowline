@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../../tests/bootstrap.php';
+// Bootstrap autonome : les tests unitaires ne dépendent que des stubs OCP
+// (nextcloud/ocp) et de PHPUnit — pas d'une instance Nextcloud complète.
 require_once __DIR__ . '/../vendor/autoload.php';
-
-\OC_App::loadApp(OCA\Flowline\AppInfo\Application::APP_ID);
-OC_Hook::clear();

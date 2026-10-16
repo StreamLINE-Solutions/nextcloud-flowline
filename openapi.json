@@ -47,12 +47,12 @@
         }
     },
     "paths": {
-        "/ocs/v2.php/apps/flowline/api": {
+        "/ocs/v2.php/apps/flowline/api/v1/account": {
             "get": {
-                "operationId": "api-index",
-                "summary": "An example API endpoint",
+                "operationId": "account-show",
+                "summary": "Get the linked FlowLINE account of the current user",
                 "tags": [
-                    "api"
+                    "account"
                 ],
                 "security": [
                     {
@@ -76,7 +76,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Data returned",
+                        "description": "Account information returned (never includes the API token)",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -96,15 +96,42 @@
                                                     "$ref": "#/components/schemas/OCSMeta"
                                                 },
                                                 "data": {
-                                                    "type": "object",
-                                                    "required": [
-                                                        "message"
-                                                    ],
-                                                    "properties": {
-                                                        "message": {
-                                                            "type": "string"
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "object",
+                                                            "required": [
+                                                                "linked",
+                                                                "account",
+                                                                "api_url"
+                                                            ],
+                                                            "properties": {
+                                                                "linked": {
+                                                                    "type": "boolean"
+                                                                },
+                                                                "account": {
+                                                                    "type": "object",
+                                                                    "nullable": true,
+                                                                    "additionalProperties": {
+                                                                        "type": "object"
+                                                                    }
+                                                                },
+                                                                "api_url": {
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "type": "object",
+                                                            "required": [
+                                                                "error"
+                                                            ],
+                                                            "properties": {
+                                                                "error": {
+                                                                    "type": "string"
+                                                                }
+                                                            }
                                                         }
-                                                    }
+                                                    ]
                                                 }
                                             }
                                         }
@@ -114,7 +141,97 @@
                         }
                     },
                     "401": {
-                        "description": "Current user is not logged in",
+                        "description": "Not authenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "required": [
+                                                "ocs"
+                                            ],
+                                            "properties": {
+                                                "ocs": {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "meta",
+                                                        "data"
+                                                    ],
+                                                    "properties": {
+                                                        "meta": {
+                                                            "$ref": "#/components/schemas/OCSMeta"
+                                                        },
+                                                        "data": {
+                                                            "anyOf": [
+                                                                {
+                                                                    "type": "object",
+                                                                    "required": [
+                                                                        "linked",
+                                                                        "account",
+                                                                        "api_url"
+                                                                    ],
+                                                                    "properties": {
+                                                                        "linked": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "account": {
+                                                                            "type": "object",
+                                                                            "nullable": true,
+                                                                            "additionalProperties": {
+                                                                                "type": "object"
+                                                                            }
+                                                                        },
+                                                                        "api_url": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    }
+                                                                },
+                                                                {
+                                                                    "type": "object",
+                                                                    "required": [
+                                                                        "error"
+                                                                    ],
+                                                                    "properties": {
+                                                                        "error": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "type": "object",
+                                            "required": [
+                                                "ocs"
+                                            ],
+                                            "properties": {
+                                                "ocs": {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "meta",
+                                                        "data"
+                                                    ],
+                                                    "properties": {
+                                                        "meta": {
+                                                            "$ref": "#/components/schemas/OCSMeta"
+                                                        },
+                                                        "data": {}
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "FlowLINE is not enabled for this user",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -133,7 +250,44 @@
                                                 "meta": {
                                                     "$ref": "#/components/schemas/OCSMeta"
                                                 },
-                                                "data": {}
+                                                "data": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "object",
+                                                            "required": [
+                                                                "linked",
+                                                                "account",
+                                                                "api_url"
+                                                            ],
+                                                            "properties": {
+                                                                "linked": {
+                                                                    "type": "boolean"
+                                                                },
+                                                                "account": {
+                                                                    "type": "object",
+                                                                    "nullable": true,
+                                                                    "additionalProperties": {
+                                                                        "type": "object"
+                                                                    }
+                                                                },
+                                                                "api_url": {
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "type": "object",
+                                                            "required": [
+                                                                "error"
+                                                            ],
+                                                            "properties": {
+                                                                "error": {
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        }
+                                                    ]
+                                                }
                                             }
                                         }
                                     }
@@ -145,5 +299,10 @@
             }
         }
     },
-    "tags": []
+    "tags": [
+        {
+            "name": "account",
+            "description": "API OCS consommée par la console FlowLINE (front Vue). Routes exposées via les attributs (enregistrement dynamique par Nextcloud)."
+        }
+    ]
 }
