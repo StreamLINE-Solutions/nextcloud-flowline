@@ -164,4 +164,85 @@ final class AccountServiceTest extends TestCase {
 
 		$this->assertNull($this->service->getPublicAccount('user1'));
 	}
+
+	/**
+	 * Compte lié minimal (jeton chiffré factice).
+	 */
+	private function linkedAccount(string $encryptedToken): Account {
+		$account = new Account();
+		$account->setUserId('user1');
+		$account->setTokenEncrypted($encryptedToken);
+		$account->setAccountJson('{}');
+		$account->setCreatedAt('2026-01-01 00:00:00');
+		$account->setUpdatedAt('2026-01-01 00:00:00');
+
+		return $account;
+	}
+
+	public function testGetMachinesRequiresLinkedAccount(): void {
+		$this->mapper->method('findByUser')->willReturn(null);
+		$this->client->expects($this->never())->method('machines');
+
+		try {
+			$this->service->getMachines('user1');
+			$this->fail('Expected FlowlineApiException');
+		} catch (FlowlineApiException $e) {
+			$this->assertSame(FlowlineApiException::REASON_NOT_LINKED, $e->getReason());
+		}
+	}
+
+	public function testGetMachinesUsesDecryptedTokenAndShapesPayload(): void {
+		$this->mapper->method('findByUser')->willReturn($this->linkedAccount('encrypted-token'));
+		$this->crypto->expects($this->once())->method('decrypt')->with('encrypted-token')->willReturn('flapi_clear');
+		$this->client->expects($this->once())->method('machines')
+			->with('flapi_clear', 2, 100)
+			->willReturn([
+				'total' => 3,
+				'machines' => [['id' => 1], ['id' => 2], ['id' => 3]],
+				'ignored' => 'extra',
+			]);
+
+		$result = $this->service->getMachines('user1', 2, 100);
+
+		$this->assertSame(3, $result['total']);
+		$this->assertCount(3, $result['machines']);
+		$this->assertSame(['id' => 1], $result['machines'][0]);
+	}
+
+	public function testGetSessionsPassesActiveFilterAndShapesPayload(): void {
+		$this->mapper->method('findByUser')->willReturn($this->linkedAccount('encrypted-token'));
+		$this->crypto->method('decrypt')->willReturn('flapi_clear');
+		$this->client->expects($this->once())->method('sessions')
+			->with('flapi_clear', true, 1, 20)
+			->willReturn(['total' => 1, 'sessions' => [['id' => 9, 'active' => true]]]);
+
+		$result = $this->service->getSessions('user1', true, 1, 20);
+
+		$this->assertSame(1, $result['total']);
+		$this->assertSame(9, $result['sessions'][0]['id']);
+	}
+
+	public function testGetSessionsToleratesMalformedPayload(): void {
+		$this->mapper->method('findByUser')->willReturn($this->linkedAccount('encrypted-token'));
+		$this->crypto->method('decrypt')->willReturn('flapi_clear');
+		$this->client->method('sessions')->willReturn(['sessions' => 'oops']);
+
+		$result = $this->service->getSessions('user1');
+
+		$this->assertSame(0, $result['total']);
+		$this->assertSame([], $result['sessions']);
+	}
+
+	public function testGetMachinesFailsWhenStoredTokenIsUnreadable(): void {
+		$this->mapper->method('findByUser')->willReturn($this->linkedAccount('corrupted'));
+		$this->crypto->method('decrypt')->willThrowException(new \Exception('HMAC mismatch'));
+		$this->client->expects($this->never())->method('machines');
+
+		try {
+			$this->service->getMachines('user1');
+			$this->fail('Expected FlowlineApiException');
+		} catch (FlowlineApiException $e) {
+			$this->assertSame(FlowlineApiException::REASON_INVALID_TOKEN, $e->getReason());
+		}
+	}
 }

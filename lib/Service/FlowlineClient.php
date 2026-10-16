@@ -44,8 +44,6 @@ class FlowlineClient {
 	/**
 	 * @return array<array-key, mixed>
 	 * @throws FlowlineApiException
-	 *
-	 * @psalm-suppress PossiblyUnusedMethod
 	 */
 	public function machines(string $token, int $page = 1, int $pageSize = 500): array {
 		return $this->request('GET', '/machines', $token, [
@@ -56,8 +54,6 @@ class FlowlineClient {
 	/**
 	 * @return array<array-key, mixed>
 	 * @throws FlowlineApiException
-	 *
-	 * @psalm-suppress PossiblyUnusedMethod
 	 */
 	public function sessions(string $token, ?bool $active = null, int $page = 1, int $pageSize = 100): array {
 		$query = ['current' => $page, 'pageSize' => $pageSize];

@@ -13,6 +13,7 @@ namespace OCA\Flowline\Service;
 class FlowlineApiException extends \Exception {
 	public const REASON_INVALID_FORMAT = 'invalid_format';
 	public const REASON_INVALID_TOKEN = 'invalid_token';
+	public const REASON_NOT_LINKED = 'not_linked';
 	public const REASON_FORBIDDEN = 'forbidden';
 	public const REASON_NOT_FOUND = 'not_found';
 	public const REASON_CONFLICT = 'conflict';

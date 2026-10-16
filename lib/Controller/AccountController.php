@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace OCA\Flowline\Controller;
 
-use OCA\Flowline\AppInfo\Application;
 use OCA\Flowline\Service\AccountService;
 use OCA\Flowline\Service\ConfigService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\ApiRoute;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\DataResponse;
-use OCP\AppFramework\OCSController;
 use OCP\IRequest;
 use OCP\IUserSession;
 
@@ -22,20 +20,20 @@ use OCP\IUserSession;
  *
  * @psalm-suppress UnusedClass
  */
-class AccountController extends OCSController {
+class AccountController extends FlowlineOCSController {
 	public function __construct(
 		IRequest $request,
 		private AccountService $accountService,
-		private ConfigService $config,
-		private IUserSession $userSession,
+		ConfigService $config,
+		IUserSession $userSession,
 	) {
-		parent::__construct(Application::APP_ID, $request);
+		parent::__construct($request, $config, $userSession);
 	}
 
 	/**
 	 * Get the linked FlowLINE account of the current user
 	 *
-	 * @return DataResponse<Http::STATUS_OK|Http::STATUS_UNAUTHORIZED|Http::STATUS_FORBIDDEN, array{linked: bool, account: array<string, mixed>|null, api_url: string}|array{error: string}, array{}>
+	 * @return DataResponse<Http::STATUS_OK|Http::STATUS_UNAUTHORIZED|Http::STATUS_FORBIDDEN, array{linked: bool, account: array<string, mixed>|null, api_url: string}|array{error: string, message?: string}, array{}>
 	 *
 	 * 200: Account information returned (never includes the API token)
 	 * 401: Not authenticated
@@ -46,10 +44,10 @@ class AccountController extends OCSController {
 	public function show(): DataResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
-			return new DataResponse(['error' => 'unauthenticated'], Http::STATUS_UNAUTHORIZED);
+			return $this->error('unauthenticated', Http::STATUS_UNAUTHORIZED);
 		}
 		if (!$this->config->isUserAllowed($user)) {
-			return new DataResponse(['error' => 'forbidden'], Http::STATUS_FORBIDDEN);
+			return $this->error('forbidden', Http::STATUS_FORBIDDEN);
 		}
 
 		$account = $this->accountService->getPublicAccount($user->getUID());

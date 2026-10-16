@@ -83,6 +83,58 @@ class AccountService {
 	}
 
 	/**
+	 * Machines visibles par le compte lié (parc, fenêtres support, parc partagé).
+	 *
+	 * @return array{total: int, machines: list<mixed>}
+	 * @throws FlowlineApiException compte non lié, jeton refusé ou API injoignable
+	 */
+	public function getMachines(string $userId, int $page = 1, int $pageSize = 500): array {
+		$payload = $this->client->machines($this->requireToken($userId), $page, $pageSize);
+		$machines = $payload['machines'] ?? null;
+
+		return [
+			'total' => (int)($payload['total'] ?? 0),
+			'machines' => is_array($machines) ? array_values($machines) : [],
+		];
+	}
+
+	/**
+	 * Sessions du compte lié (toutes, actives ou terminées).
+	 *
+	 * @return array{total: int, sessions: list<mixed>}
+	 * @throws FlowlineApiException compte non lié, jeton refusé ou API injoignable
+	 */
+	public function getSessions(string $userId, ?bool $active = null, int $page = 1, int $pageSize = 50): array {
+		$payload = $this->client->sessions($this->requireToken($userId), $active, $page, $pageSize);
+		$sessions = $payload['sessions'] ?? null;
+
+		return [
+			'total' => (int)($payload['total'] ?? 0),
+			'sessions' => is_array($sessions) ? array_values($sessions) : [],
+		];
+	}
+
+	/**
+	 * Jeton en clair du compte lié (jamais exposé au front).
+	 *
+	 * @throws FlowlineApiException REASON_NOT_LINKED si aucun compte,
+	 *                              REASON_INVALID_TOKEN si le jeton est illisible
+	 */
+	private function requireToken(string $userId): string {
+		$account = $this->mapper->findByUser($userId);
+		if ($account === null) {
+			throw new FlowlineApiException(FlowlineApiException::REASON_NOT_LINKED, 'No FlowLINE account linked');
+		}
+
+		try {
+			return $this->crypto->decrypt($account->getTokenEncrypted());
+		} catch (\Exception) {
+			// Clé de chiffrement remplacée ou données corrompues : relier à nouveau.
+			throw new FlowlineApiException(FlowlineApiException::REASON_INVALID_TOKEN, 'Stored token is unreadable');
+		}
+	}
+
+	/**
 	 * @return array<string, mixed>
 	 */
 	private function publicAccount(Account $account): array {
