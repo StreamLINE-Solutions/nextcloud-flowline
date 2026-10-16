@@ -35,6 +35,27 @@ npm run build             # production build (js/ + css/)
 npm run watch             # development build, watches for changes
 ```
 
+### Browser support (web client)
+
+The FlowLINE web client (support session in the browser — nothing to install
+on the technician side) is served by the app at `/apps/flowline/webclient`,
+with a **Browser support** button in the console (machines and support
+windows). The bundle lives in `webclient/` and is **committed**: it is built
+from the sibling `web-client` project, which this repository's CI does not
+have access to.
+
+```sh
+# from a workspace with both checkouts (web-client/ + nextcloud-flowline/):
+bash scripts/build-webclient.sh
+```
+
+The page is served with a strict CSP: Nextcloud script nonce, no
+`unsafe-eval` (`'wasm-unsafe-eval'` only, for libsodium), `connect-src`
+limited to `self` + the configured WebSocket endpoints. The `flapi_` API
+token never reaches the browser — the support window is opened server-side.
+The WebSocket endpoints are configurable in the admin settings (defaults:
+`wss://falcon.my-vth.ch/ws/id` and `wss://falcon.my-vth.ch/ws/relay`).
+
 ### Testing against a Nextcloud instance
 
 A ready-to-use dev instance is included:
@@ -61,7 +82,9 @@ Nextcloud organisation (observed 2026-10-15: 56 runs stuck).
 
 Releases are signed and published to the
 [Nextcloud app store](https://apps.nextcloud.com). Built frontend assets
-(`js/`, `css/`) are generated at package time and are not committed.
+(`js/`, `css/`) are generated at package time and are not committed; the web
+client bundle (`webclient/`) is committed instead (see above) and included in
+the release tarball.
 
 Publishing is automated: publishing a GitHub release builds, packages and
 pushes the app to the store — see [`dev/README.md`](dev/README.md) for the

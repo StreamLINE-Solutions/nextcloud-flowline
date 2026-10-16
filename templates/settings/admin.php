@@ -7,7 +7,7 @@ declare(strict_types=1);
 
 $statusMessages = [
 	'saved' => [$l->t('Settings saved.'), 'success'],
-	'invalid_url' => [$l->t('The API URL is not valid (expected http(s)://…).'), 'error'],
+	'invalid_url' => [$l->t('A URL is not valid (expected http(s)://… or ws(s)://…).'), 'error'],
 ];
 $status = (string)$_['status'];
 ?>
@@ -26,6 +26,20 @@ $status = (string)$_['status'];
 			<input type="text" id="flowline-api-url" name="apiUrl" value="<?php p((string)$_['apiUrl']); ?>" placeholder="<?php p((string)$_['defaultApiUrl']); ?>">
 			<br>
 			<span class="settings-hint"><?php p($l->t('Default: %s — change only for a self-hosted FlowLINE API.', [(string)$_['defaultApiUrl']])); ?></span>
+		</p>
+
+		<p>
+			<label for="flowline-web-rdv-url"><?php p($l->t('Web client — rendezvous WebSocket URL')); ?></label><br>
+			<input type="text" id="flowline-web-rdv-url" name="webRdvUrl" value="<?php p((string)$_['webRdvUrl']); ?>" placeholder="<?php p((string)$_['defaultWebRdvUrl']); ?>">
+			<br>
+			<span class="settings-hint"><?php p($l->t('Default: %s — ws:// or wss:// URL used by the browser support page.', [(string)$_['defaultWebRdvUrl']])); ?></span>
+		</p>
+
+		<p>
+			<label for="flowline-web-relay-url"><?php p($l->t('Web client — relay WebSocket URL')); ?></label><br>
+			<input type="text" id="flowline-web-relay-url" name="webRelayUrl" value="<?php p((string)$_['webRelayUrl']); ?>" placeholder="<?php p((string)$_['defaultWebRelayUrl']); ?>">
+			<br>
+			<span class="settings-hint"><?php p($l->t('Default: %s — used when the support session goes through the relay.', [(string)$_['defaultWebRelayUrl']])); ?></span>
 		</p>
 
 		<p>

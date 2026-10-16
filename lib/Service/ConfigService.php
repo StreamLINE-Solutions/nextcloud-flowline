@@ -15,7 +15,13 @@ use OCP\IUser;
 class ConfigService {
 	public const DEFAULT_API_URL = 'https://api-falcon.my-vth.ch';
 
+	/** Endpoints WebSocket du client web (défauts production). */
+	public const DEFAULT_WEB_RDV_URL = 'wss://falcon.my-vth.ch/ws/id';
+	public const DEFAULT_WEB_RELAY_URL = 'wss://falcon.my-vth.ch/ws/relay';
+
 	private const KEY_API_URL = 'api_url';
+	private const KEY_WEB_RDV_URL = 'webclient_rdv_url';
+	private const KEY_WEB_RELAY_URL = 'webclient_relay_url';
 
 	/**
 	 * ⚠ Ne pas utiliser `enabled` : clé réservée par le cœur Nextcloud
@@ -57,6 +63,63 @@ class ConfigService {
 
 	public function isEnabled(): bool {
 		return $this->appConfig->getValueBool(Application::APP_ID, self::KEY_ENABLED, true);
+	}
+
+	/**
+	 * Endpoint WS du serveur de rendez-vous (client web).
+	 */
+	public function getWebclientRdvUrl(): string {
+		return $this->webSocketUrl(self::KEY_WEB_RDV_URL, self::DEFAULT_WEB_RDV_URL);
+	}
+
+	/**
+	 * Endpoint WS du relais (client web).
+	 */
+	public function getWebclientRelayUrl(): string {
+		return $this->webSocketUrl(self::KEY_WEB_RELAY_URL, self::DEFAULT_WEB_RELAY_URL);
+	}
+
+	/**
+	 * @throws \InvalidArgumentException URL invalide (schéma ws:// ou wss:// attendu)
+	 */
+	public function setWebclientRdvUrl(string $url): void {
+		$this->appConfig->setValueString(
+			Application::APP_ID,
+			self::KEY_WEB_RDV_URL,
+			$this->cleanWebSocketUrl($url, self::DEFAULT_WEB_RDV_URL),
+		);
+	}
+
+	/**
+	 * @throws \InvalidArgumentException URL invalide (schéma ws:// ou wss:// attendu)
+	 */
+	public function setWebclientRelayUrl(string $url): void {
+		$this->appConfig->setValueString(
+			Application::APP_ID,
+			self::KEY_WEB_RELAY_URL,
+			$this->cleanWebSocketUrl($url, self::DEFAULT_WEB_RELAY_URL),
+		);
+	}
+
+	private function webSocketUrl(string $key, string $default): string {
+		$url = trim($this->appConfig->getValueString(Application::APP_ID, $key, $default));
+
+		return $url === '' ? $default : rtrim($url, '/');
+	}
+
+	/**
+	 * @throws \InvalidArgumentException
+	 */
+	private function cleanWebSocketUrl(string $url, string $default): string {
+		$url = rtrim(trim($url), '/');
+		if ($url === '') {
+			return $default;
+		}
+		if (preg_match('#^wss?://[^\s]+$#i', $url) !== 1) {
+			throw new \InvalidArgumentException('Invalid WebSocket URL: ' . $url);
+		}
+
+		return $url;
 	}
 
 	public function setEnabled(bool $enabled): void {

@@ -42,10 +42,12 @@ jobs:
             --exclude='*.map' \
             --include='appinfo/***' --include='lib/***' --include='js/***' \
             --include='css/***' --include='img/***' --include='l10n/***' \
-            --include='templates/***' --include='openapi.json' --include='LICENSE' \
+            --include='templates/***' --include='webclient/***' \
+            --include='openapi.json' --include='LICENSE' \
             --exclude='*' \
             ./ "build/artifacts/appstore/${APP_NAME}/"
           test -f "build/artifacts/appstore/${APP_NAME}/appinfo/info.xml"
+          test -f "build/artifacts/appstore/${APP_NAME}/webclient/index.html"
           tar -C build/artifacts/appstore -czf "build/artifacts/appstore/${APP_NAME}.tar.gz" "${APP_NAME}"
 
       - name: Attach tarball to the GitHub release

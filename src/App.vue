@@ -27,7 +27,7 @@ interface AccountPayload {
 }
 
 interface Machine {
-	id: number
+	id: string
 	hostname: string
 	username: string
 	os: string
@@ -244,6 +244,34 @@ async function endSupportWindow(invitation: Invitation): Promise<void> {
 	}
 }
 
+function webClientUrl(deviceId: string): string {
+	return generateUrl('/apps/flowline/webclient') + '?target=' + encodeURIComponent(deviceId)
+}
+
+/**
+ * Session navigateur : ouvre la fenêtre support (traçabilité côté API,
+ * best-effort) puis la page du client web dans un nouvel onglet. La page est
+ * servie par l'app avec la config WS injectée — aucun jeton ne transite.
+ */
+async function openBrowserSession(deviceId: string): Promise<void> {
+	const id = deviceId.replace(/\s+/g, '')
+	if (id === '') {
+		return
+	}
+	supportBusy.value = true
+	supportFeedback.value = null
+	try {
+		await axios.post(generateOcsUrl('apps/flowline/api/v1/invitations'), { deviceId: id })
+	} catch (e) {
+		// Non bloquant : la session navigateur peut démarrer sans fenêtre
+		// (poste lié à un compte, fenêtre déjà ouverte par un autre compte…).
+		supportFeedback.value = { type: 'warning', text: describeSupportError(e) }
+	} finally {
+		supportBusy.value = false
+	}
+	window.open(webClientUrl(id), '_blank', 'noopener')
+}
+
 async function copyModuleLink(): Promise<void> {
 	try {
 		await navigator.clipboard.writeText(account.value?.support_module_url ?? '')
@@ -446,6 +474,9 @@ function invitationStatus(invitation: Invitation): string {
 								<span class="flowline-meta flowline-right">
 									{{ machine.online ? t('flowline', 'Online') : relative(machine.last_seen) }}
 								</span>
+								<NcButton :disabled="supportBusy" @click="openBrowserSession(String(machine.id))">
+									{{ t('flowline', 'Browser support') }}
+								</NcButton>
 							</li>
 						</ul>
 					</section>
@@ -497,7 +528,7 @@ function invitationStatus(invitation: Invitation): string {
 						<NcLoadingIcon v-if="invitationsLoading" :size="32" />
 						<template v-else>
 							<p class="flowline-hint">
-								{{ t('flowline', 'Give the support module link to the user, then open a window with the id shown by the module. Start the session from your FlowLINE client.') }}
+								{{ t('flowline', 'Give the support module link to the user, then open a window with the id shown by the module. Start the session from your FlowLINE client — or in the browser with “Browser support”.') }}
 							</p>
 							<div class="flowline-actions">
 								<NcButton @click="copyModuleLink">
@@ -513,6 +544,10 @@ function invitationStatus(invitation: Invitation): string {
 									:disabled="!canInvite || supportBusy || supportDeviceId.trim() === ''"
 									@click="openSupportWindow">
 									{{ t('flowline', 'Open window') }}
+								</NcButton>
+								<NcButton :disabled="supportBusy || supportDeviceId.trim() === ''"
+									@click="openBrowserSession(supportDeviceId)">
+									{{ t('flowline', 'Browser support') }}
 								</NcButton>
 							</div>
 

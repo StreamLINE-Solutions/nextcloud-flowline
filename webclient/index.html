@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="fr">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>FlowLINE Web — spike</title>
+		<style>
+			:root { color-scheme: dark; }
+			body {
+				margin: 0;
+				padding: 16px;
+				font: 14px/1.45 system-ui, sans-serif;
+				background: #17171b;
+				color: #e8e8ee;
+			}
+			h1 { font-size: 18px; margin: 0 0 4px; }
+			.warn { color: #f0b429; margin: 0 0 12px; }
+			.hint { color: #8a8a99; font-size: 12px; margin: 6px 0 0; }
+			.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 12px; }
+			label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #b9b9c6; }
+			input {
+				background: #26262e;
+				border: 1px solid #3a3a46;
+				border-radius: 6px;
+				color: #fff;
+				padding: 6px 8px;
+				min-width: 260px;
+			}
+			button {
+				background: #2f6feb;
+				border: 0;
+				border-radius: 6px;
+				color: #fff;
+				cursor: pointer;
+				font-weight: 600;
+				padding: 8px 14px;
+			}
+			button:disabled { opacity: 0.5; cursor: default; }
+			pre {
+				background: #101014;
+				border: 1px solid #2a2a33;
+				border-radius: 6px;
+				font-size: 12px;
+				margin: 0 0 12px;
+				max-height: 380px;
+				overflow: auto;
+				padding: 10px;
+				white-space: pre-wrap;
+			}
+			canvas { background: #000; border: 1px solid #2a2a33; border-radius: 6px; max-width: 100%; }
+		</style>
+		<script type="module" crossorigin src="./assets/index-TQ-lAvaL.js"></script>
+	</head>
+	<body>
+		<h1>FlowLINE Web — spike</h1>
+		<p class="warn">Spike : en production, la page est servie par l'app Nextcloud (WSS + session autorisée côté serveur). En dev autonome : <code>ws://</code> LAN non chiffré.</p>
+		<div class="row">
+			<label>
+				Rendez-vous (WS)
+				<input id="rdv" />
+			</label>
+			<label>
+				Poste cible (id)
+				<input id="target" placeholder="223 483 138" />
+			</label>
+		</div>
+		<div class="row">
+			<label>
+				Relais (WS — injecté par la page hôte)
+				<input id="relay" />
+			</label>
+		</div>
+		<div class="row">
+			<button id="connect">Connecter</button>
+		</div>
+		<pre id="log"></pre>
+		<canvas id="screen" width="960" height="540" tabindex="0"></canvas>
+		<p class="hint">Cliquer dans l'écran pour capturer le clavier.</p>
+	</body>
+</html>

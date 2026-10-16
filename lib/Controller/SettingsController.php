@@ -78,10 +78,16 @@ class SettingsController extends Controller {
 	}
 
 	#[FrontpageRoute(verb: 'POST', url: '/settings/admin')]
-	public function adminSave(string $apiUrl = '', array $groups = [], bool $enabled = false): RedirectResponse {
+	public function adminSave(string $apiUrl = '', array $groups = [], bool $enabled = false, string $webRdvUrl = '', string $webRelayUrl = ''): RedirectResponse {
 		$status = 'saved';
 		try {
 			$this->config->setApiUrl($apiUrl);
+		} catch (\InvalidArgumentException) {
+			$status = 'invalid_url';
+		}
+		try {
+			$this->config->setWebclientRdvUrl($webRdvUrl);
+			$this->config->setWebclientRelayUrl($webRelayUrl);
 		} catch (\InvalidArgumentException) {
 			$status = 'invalid_url';
 		}

@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Réponses d'erreur OCS stables (`error` : `invalid_token`, `not_linked`, `rate_limited`, …) pour des messages adaptés côté console
 - Section « FlowLINE » dans les réglages + console (état lié/non-lié)
 - Console en onglets horizontaux : **Support** (machines + fenêtres support), **Connexions récentes** (sessions), **Compte lié**
+- Assistance navigateur : page `/apps/flowline/webclient` servie par l'app (client web FlowLINE, endpoints WS injectés, CSP restreinte) et bouton **Browser support** (machines + fenêtres support) — aucun jeton transmis au navigateur
+- Réglages admin : endpoints WebSocket du client web (rendez-vous, relais) en plus de l'URL de l'API
 - Tests unitaires (AccountService, FlowlineClient)
 
 ### Fixed
