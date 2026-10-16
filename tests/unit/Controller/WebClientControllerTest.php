@@ -35,8 +35,8 @@ final class WebClientControllerTest extends TestCase {
 		$this->config->method('getWebclientRdvUrl')->willReturn('wss://rdv.example/ws/id');
 		$this->config->method('getWebclientRelayUrl')->willReturn('wss://relay.example:8443/ws/relay');
 		$this->url->method('linkToRoute')->willReturnCallback(
-			static fn (string $route, array $params = []): string =>
-				'/index.php/apps/flowline/webclient/assets/' . ($params['file'] ?? ''),
+			static fn (string $route, array $params = []): string
+				=> '/index.php/apps/flowline/webclient/assets/' . ($params['file'] ?? ''),
 		);
 	}
 

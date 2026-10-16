@@ -248,7 +248,7 @@ function webClientUrl(deviceId: string): string {
 	return generateUrl('/apps/flowline/webclient') + '?target=' + encodeURIComponent(deviceId)
 }
 
-/**
+/*
  * Session navigateur : ouvre la fenêtre support (traçabilité côté API,
  * best-effort) puis la page du client web dans un nouvel onglet. La page est
  * servie par l'app avec la config WS injectée — aucun jeton ne transite.

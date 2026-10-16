@@ -130,7 +130,7 @@ class WebClientController extends Controller {
 			'#\./assets/([A-Za-z0-9][A-Za-z0-9._-]*)#',
 			fn (array $matches): string => $this->url->linkToRoute(
 				'flowline.webclient.asset',
-				['file' => (string)($matches[1] ?? '')],
+				['file' => $matches[1] ?? ''],
 			),
 			$html,
 		);
@@ -199,7 +199,10 @@ class WebClientController extends Controller {
 
 			return '';
 		}
-		/** @psalm-suppress MixedMethodCall Classe interne Nextcloud, non typée. */
+		/**
+		 * @psalm-suppress MixedMethodCall Classe interne Nextcloud, non typée.
+		 * @psalm-suppress MixedAssignment Retour non typé.
+		 */
 		$nonce = $manager->getNonce();
 
 		return is_string($nonce) ? $nonce : '';
@@ -236,13 +239,13 @@ class WebClientController extends Controller {
 		if ($parts === false || !isset($parts['scheme'], $parts['host'])) {
 			return '';
 		}
-		$scheme = strtolower((string)$parts['scheme']);
+		$scheme = strtolower($parts['scheme']);
 		if ($scheme !== 'ws' && $scheme !== 'wss') {
 			return '';
 		}
-		$origin = $scheme . '://' . (string)$parts['host'];
+		$origin = $scheme . '://' . $parts['host'];
 		if (isset($parts['port'])) {
-			$origin .= ':' . (string)$parts['port'];
+			$origin .= ':' . $parts['port'];
 		}
 
 		return $origin;
