@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import axios from '@nextcloud/axios'
 import { formatRelativeTime, translate as t } from '@nextcloud/l10n'
 import { generateOcsUrl, generateUrl } from '@nextcloud/router'
@@ -9,6 +9,7 @@ import NcContent from '@nextcloud/vue/components/NcContent'
 import NcEmptyContent from '@nextcloud/vue/components/NcEmptyContent'
 import NcLoadingIcon from '@nextcloud/vue/components/NcLoadingIcon'
 import NcNoteCard from '@nextcloud/vue/components/NcNoteCard'
+import NcTextField from '@nextcloud/vue/components/NcTextField'
 
 interface AccountInfo {
 	username: string
@@ -52,6 +53,22 @@ interface Session {
 	duration_seconds: number | null
 }
 
+interface Invitation {
+	device_id: string
+	created_at: string
+	expires_at: string
+	last_conn_at: string | null
+	quit_sent: number
+	hostname: string | null
+	os: string | null
+	last_seen: string | null
+}
+
+interface SupportFeedback {
+	type: 'success' | 'warning' | 'error'
+	text: string
+}
+
 const loading = ref(true)
 const error = ref('')
 const linked = ref(false)
@@ -68,6 +85,17 @@ const sessionsError = ref('')
 const activeSessions = ref<Session[]>([])
 const recentSessions = ref<Session[]>([])
 const needsRelink = ref(false)
+
+const invitationsLoading = ref(false)
+const invitationsError = ref('')
+const invitations = ref<Invitation[]>([])
+const supportDeviceId = ref('')
+const supportBusy = ref(false)
+const supportFeedback = ref<SupportFeedback | null>(null)
+const linkCopied = ref(false)
+
+const canInvite = computed(() => account.value?.scopes.includes('invitations:write') ?? false)
+const busy = computed(() => machinesLoading.value || sessionsLoading.value || invitationsLoading.value)
 
 const settingsUrl = generateUrl('/settings/user/flowline')
 
@@ -94,7 +122,7 @@ async function load(): Promise<void> {
 }
 
 async function refresh(): Promise<void> {
-	await Promise.all([loadMachines(), loadSessions()])
+	await Promise.all([loadMachines(), loadSessions(), loadInvitations()])
 }
 
 async function loadMachines(): Promise<void> {
@@ -131,6 +159,81 @@ async function loadSessions(): Promise<void> {
 	}
 }
 
+async function loadInvitations(): Promise<void> {
+	invitationsLoading.value = true
+	invitationsError.value = ''
+	try {
+		const response = await axios.get(generateOcsUrl('apps/flowline/api/v1/invitations'))
+		// L'API conserve les fenêtres terminées (`quit_sent` = 1, fin envoyée au
+		// module) jusqu'à leur expiration : elles ne sont plus actives ici.
+		invitations.value = (response.data.ocs.data as { invitations: Invitation[] }).invitations
+			.filter((invitation) => Number(invitation.quit_sent) !== 1)
+	} catch (e) {
+		invitationsError.value = describeError(e)
+	} finally {
+		invitationsLoading.value = false
+	}
+}
+
+async function openSupportWindow(): Promise<void> {
+	supportBusy.value = true
+	supportFeedback.value = null
+	try {
+		const response = await axios.post(generateOcsUrl('apps/flowline/api/v1/invitations'), {
+			deviceId: supportDeviceId.value,
+		})
+		const payload = response.data.ocs.data as { id: string, window: boolean, expires_at: string, reason: string }
+		if (payload.window) {
+			supportFeedback.value = {
+				type: 'success',
+				text: t('flowline', 'Support window opened for {id} (expires {when}).', {
+					id: payload.id,
+					when: relative(payload.expires_at),
+				}),
+			}
+			supportDeviceId.value = ''
+		} else {
+			supportFeedback.value = {
+				type: 'warning',
+				text: t('flowline', 'This device already has a FlowLINE account — no support window is needed.'),
+			}
+		}
+		await loadInvitations()
+	} catch (e) {
+		supportFeedback.value = { type: 'error', text: describeSupportError(e) }
+	} finally {
+		supportBusy.value = false
+	}
+}
+
+async function endSupportWindow(invitation: Invitation): Promise<void> {
+	supportBusy.value = true
+	supportFeedback.value = null
+	try {
+		await axios.delete(generateOcsUrl('apps/flowline/api/v1/invitations/{deviceId}', {
+			deviceId: invitation.device_id,
+		}))
+		supportFeedback.value = { type: 'success', text: t('flowline', 'Support window ended.') }
+		await loadInvitations()
+	} catch (e) {
+		supportFeedback.value = { type: 'error', text: describeSupportError(e) }
+	} finally {
+		supportBusy.value = false
+	}
+}
+
+async function copyModuleLink(): Promise<void> {
+	try {
+		await navigator.clipboard.writeText(account.value?.support_module_url ?? '')
+		linkCopied.value = true
+		setTimeout(() => {
+			linkCopied.value = false
+		}, 3000)
+	} catch {
+		linkCopied.value = false
+	}
+}
+
 function reasonOf(e: unknown): string {
 	const data = (e as { response?: { data?: { ocs?: { data?: { error?: unknown } } } } })?.response?.data?.ocs?.data
 	return typeof data?.error === 'string' ? data.error : 'network'
@@ -143,12 +246,29 @@ function describeError(e: unknown): string {
 		return t('flowline', 'FlowLINE rejected your token.')
 	}
 	if (reason === 'forbidden') {
-		return t('flowline', 'Your token is missing the required permissions (machines and sessions).')
+		return t('flowline', 'Your token is missing the required permissions.')
 	}
 	if (reason === 'rate_limited') {
 		return t('flowline', 'Too many requests to FlowLINE. Try again in a moment.')
 	}
 	return t('flowline', 'FlowLINE is unreachable right now.')
+}
+
+function describeSupportError(e: unknown): string {
+	const reason = reasonOf(e)
+	if (reason === 'invalid_format') {
+		return t('flowline', 'Invalid device id.')
+	}
+	if (reason === 'conflict') {
+		return t('flowline', 'Another account already has an active support window on this device.')
+	}
+	if (reason === 'not_found') {
+		return t('flowline', 'No active support window for this device.')
+	}
+	if (reason === 'rate_limited') {
+		return t('flowline', 'Too many active support windows.')
+	}
+	return describeError(e)
 }
 
 function machineName(machine: Machine): string {
@@ -160,6 +280,10 @@ function machineName(machine: Machine): string {
 
 function sessionName(session: Session): string {
 	return session.hostname !== '' ? session.hostname : session.device_id
+}
+
+function invitationName(invitation: Invitation): string {
+	return invitation.hostname !== null && invitation.hostname !== '' ? invitation.hostname : invitation.device_id
 }
 
 function osLabel(os: string, version: string): string {
@@ -205,6 +329,13 @@ function sessionEndedLabel(session: Session): string {
 	const length = duration(session.duration_seconds)
 	return length === '' ? started : `${started} · ${length}`
 }
+
+function invitationExpiry(invitation: Invitation): string {
+	const connected = invitation.last_conn_at !== null && invitation.last_conn_at !== ''
+		? t('flowline', 'Module connected {when}', { when: relative(invitation.last_conn_at) })
+		: t('flowline', 'Module not connected yet')
+	return `${connected} · ${t('flowline', 'expires {when}', { when: relative(invitation.expires_at) })}`
+}
 </script>
 
 <template>
@@ -237,7 +368,7 @@ function sessionEndedLabel(session: Session): string {
 								{{ t('flowline', 'Connected to {url}', { url: apiUrl }) }}
 							</p>
 						</div>
-						<NcButton :disabled="machinesLoading || sessionsLoading" @click="refresh">
+						<NcButton :disabled="busy" @click="refresh">
 							{{ t('flowline', 'Refresh') }}
 						</NcButton>
 					</div>
@@ -315,6 +446,61 @@ function sessionEndedLabel(session: Session): string {
 							</template>
 						</template>
 					</section>
+
+					<section class="flowline-section">
+						<h3>{{ t('flowline', 'Support') }}</h3>
+						<NcLoadingIcon v-if="invitationsLoading" :size="32" />
+						<template v-else>
+							<p class="flowline-hint">
+								{{ t('flowline', 'Give the support module link to the user, then open a window with the id shown by the module.') }}
+							</p>
+							<div class="flowline-actions">
+								<NcButton @click="copyModuleLink">
+									{{ linkCopied ? t('flowline', 'Link copied') : t('flowline', 'Copy module link') }}
+								</NcButton>
+								<NcTextField v-model="supportDeviceId"
+									class="flowline-device-field"
+									:label="t('flowline', 'Device id')"
+									:placeholder="t('flowline', 'e.g. 159 627 370')"
+									:disabled="!canInvite || supportBusy"
+									@keyup.enter="openSupportWindow" />
+								<NcButton variant="primary"
+									:disabled="!canInvite || supportBusy || supportDeviceId.trim() === ''"
+									@click="openSupportWindow">
+									{{ t('flowline', 'Open window') }}
+								</NcButton>
+							</div>
+
+							<NcNoteCard v-if="!canInvite" type="warning">
+								{{ t('flowline', 'Your token is missing the invitations permission (invitations:write).') }}
+							</NcNoteCard>
+							<NcNoteCard v-if="supportFeedback" :type="supportFeedback.type">
+								{{ supportFeedback.text }}
+							</NcNoteCard>
+							<NcNoteCard v-if="invitationsError !== ''" type="error">
+								{{ invitationsError }}
+							</NcNoteCard>
+
+							<h4>
+								{{ t('flowline', 'Active windows') }}
+								<span v-if="invitations.length > 0" class="flowline-count">{{ invitations.length }}</span>
+							</h4>
+							<p v-if="invitations.length === 0 && invitationsError === ''" class="flowline-hint">
+								{{ t('flowline', 'No active support window.') }}
+							</p>
+							<ul v-else class="flowline-list">
+								<li v-for="invitation in invitations" :key="invitation.device_id" class="flowline-row">
+									<span class="flowline-dot flowline-dot--online" />
+									<span class="flowline-primary">{{ invitationName(invitation) }}</span>
+									<span class="flowline-meta">{{ invitation.device_id }}</span>
+									<span class="flowline-meta flowline-right">{{ invitationExpiry(invitation) }}</span>
+									<NcButton :disabled="!canInvite || supportBusy" @click="endSupportWindow(invitation)">
+										{{ t('flowline', 'End') }}
+									</NcButton>
+								</li>
+							</ul>
+						</template>
+					</section>
 				</template>
 			</div>
 		</NcAppContent>
@@ -351,6 +537,18 @@ function sessionEndedLabel(session: Session): string {
 	color: var(--color-text-maxcontrast);
 	font-size: 0.9em;
 	font-weight: normal;
+}
+
+.flowline-actions {
+	display: flex;
+	align-items: flex-end;
+	flex-wrap: wrap;
+	gap: 12px;
+	margin: 8px 0;
+}
+
+.flowline-device-field {
+	max-width: 260px;
 }
 
 .flowline-list {

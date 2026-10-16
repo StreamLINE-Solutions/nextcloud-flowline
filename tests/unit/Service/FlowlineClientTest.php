@@ -65,6 +65,18 @@ final class FlowlineClientTest extends TestCase {
 		}
 	}
 
+	public function testBadRequestMapsToInvalidFormat(): void {
+		$this->http->method('post')->willReturn($this->response(400, '{"detail":{"error":"Invalid device id"}}'));
+
+		try {
+			$this->flowline->openInvitation('flapi_x', 'x');
+			$this->fail('Expected FlowlineApiException');
+		} catch (FlowlineApiException $e) {
+			$this->assertSame(FlowlineApiException::REASON_INVALID_FORMAT, $e->getReason());
+			$this->assertSame(400, $e->getApiStatus());
+		}
+	}
+
 	public function testForbiddenMapsToForbidden(): void {
 		$this->http->method('get')->willReturn($this->response(403, '{"detail":{"error":"Missing scope"}}'));
 

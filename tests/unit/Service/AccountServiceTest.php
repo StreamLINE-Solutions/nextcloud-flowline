@@ -245,4 +245,79 @@ final class AccountServiceTest extends TestCase {
 			$this->assertSame(FlowlineApiException::REASON_INVALID_TOKEN, $e->getReason());
 		}
 	}
+
+	public function testGetInvitationsShapesPayload(): void {
+		$this->mapper->method('findByUser')->willReturn($this->linkedAccount('encrypted-token'));
+		$this->crypto->method('decrypt')->willReturn('flapi_clear');
+		$this->client->expects($this->once())->method('invitations')
+			->with('flapi_clear')
+			->willReturn(['invitations' => [['device_id' => '159627370']]]);
+
+		$result = $this->service->getInvitations('user1');
+
+		$this->assertCount(1, $result['invitations']);
+		$this->assertSame('159627370', $result['invitations'][0]['device_id']);
+	}
+
+	public function testOpenInvitationNormalizesDeviceIdAndShapesPayload(): void {
+		$this->mapper->method('findByUser')->willReturn($this->linkedAccount('encrypted-token'));
+		$this->crypto->method('decrypt')->willReturn('flapi_clear');
+		$this->client->expects($this->once())->method('openInvitation')
+			->with('flapi_clear', '159627370')
+			->willReturn(['id' => '159627370', 'window' => true, 'expires_at' => '2026-10-16 20:00:00']);
+
+		$result = $this->service->openInvitation('user1', ' 159 627 370 ');
+
+		$this->assertSame('159627370', $result['id']);
+		$this->assertTrue($result['window']);
+		$this->assertSame('2026-10-16 20:00:00', $result['expires_at']);
+		$this->assertSame('', $result['reason']);
+	}
+
+	public function testOpenInvitationReportsDeviceWithAccount(): void {
+		$this->mapper->method('findByUser')->willReturn($this->linkedAccount('encrypted-token'));
+		$this->crypto->method('decrypt')->willReturn('flapi_clear');
+		$this->client->method('openInvitation')
+			->willReturn(['id' => '42', 'window' => false, 'reason' => 'device_has_account']);
+
+		$result = $this->service->openInvitation('user1', '42');
+
+		$this->assertFalse($result['window']);
+		$this->assertSame('device_has_account', $result['reason']);
+	}
+
+	public function testOpenInvitationRejectsEmptyDeviceId(): void {
+		$this->client->expects($this->never())->method('openInvitation');
+
+		try {
+			$this->service->openInvitation('user1', '   ');
+			$this->fail('Expected FlowlineApiException');
+		} catch (FlowlineApiException $e) {
+			$this->assertSame(FlowlineApiException::REASON_INVALID_FORMAT, $e->getReason());
+		}
+	}
+
+	public function testEndInvitationRejectsTooLongDeviceId(): void {
+		$this->client->expects($this->never())->method('endInvitation');
+
+		try {
+			$this->service->endInvitation('user1', str_repeat('a', 65));
+			$this->fail('Expected FlowlineApiException');
+		} catch (FlowlineApiException $e) {
+			$this->assertSame(FlowlineApiException::REASON_INVALID_FORMAT, $e->getReason());
+		}
+	}
+
+	public function testEndInvitationShapesPayload(): void {
+		$this->mapper->method('findByUser')->willReturn($this->linkedAccount('encrypted-token'));
+		$this->crypto->method('decrypt')->willReturn('flapi_clear');
+		$this->client->expects($this->once())->method('endInvitation')
+			->with('flapi_clear', '159627370')
+			->willReturn(['id' => '159627370', 'ended' => true]);
+
+		$result = $this->service->endInvitation('user1', '159627370');
+
+		$this->assertSame('159627370', $result['id']);
+		$this->assertTrue($result['ended']);
+	}
 }

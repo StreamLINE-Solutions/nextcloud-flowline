@@ -90,6 +90,7 @@ class AccountService {
 	 */
 	public function getMachines(string $userId, int $page = 1, int $pageSize = 500): array {
 		$payload = $this->client->machines($this->requireToken($userId), $page, $pageSize);
+		/** @var mixed $machines */
 		$machines = $payload['machines'] ?? null;
 
 		return [
@@ -106,12 +107,80 @@ class AccountService {
 	 */
 	public function getSessions(string $userId, ?bool $active = null, int $page = 1, int $pageSize = 50): array {
 		$payload = $this->client->sessions($this->requireToken($userId), $active, $page, $pageSize);
+		/** @var mixed $sessions */
 		$sessions = $payload['sessions'] ?? null;
 
 		return [
 			'total' => (int)($payload['total'] ?? 0),
 			'sessions' => is_array($sessions) ? array_values($sessions) : [],
 		];
+	}
+
+	/**
+	 * Fenêtres d'autorisation support actives du compte lié.
+	 *
+	 * @return array{invitations: list<mixed>}
+	 * @throws FlowlineApiException compte non lié, jeton refusé ou API injoignable
+	 */
+	public function getInvitations(string $userId): array {
+		$payload = $this->client->invitations($this->requireToken($userId));
+		/** @var mixed $invitations */
+		$invitations = $payload['invitations'] ?? null;
+
+		return ['invitations' => is_array($invitations) ? array_values($invitations) : []];
+	}
+
+	/**
+	 * Ouvre (ou rouvre) une fenêtre support pour un poste.
+	 *
+	 * `window` = false (raison `device_has_account`) quand le poste est déjà
+	 * lié à un compte : ses écritures sont déjà authentifiées, la fenêtre ne
+	 * le concerne pas.
+	 *
+	 * @return array{id: string, window: bool, expires_at: string, reason: string}
+	 * @throws FlowlineApiException identifiant invalide, compte non lié, jeton refusé ou API injoignable
+	 */
+	public function openInvitation(string $userId, string $deviceId): array {
+		$deviceId = $this->normalizeDeviceId($deviceId);
+		$payload = $this->client->openInvitation($this->requireToken($userId), $deviceId);
+
+		return [
+			'id' => (string)($payload['id'] ?? $deviceId),
+			'window' => ($payload['window'] ?? false) === true,
+			'expires_at' => (string)($payload['expires_at'] ?? ''),
+			'reason' => (string)($payload['reason'] ?? ''),
+		];
+	}
+
+	/**
+	 * Termine la fenêtre support d'un poste (`quit` envoyé au module).
+	 *
+	 * @return array{id: string, ended: bool}
+	 * @throws FlowlineApiException identifiant invalide, compte non lié, jeton refusé ou API injoignable
+	 */
+	public function endInvitation(string $userId, string $deviceId): array {
+		$deviceId = $this->normalizeDeviceId($deviceId);
+		$payload = $this->client->endInvitation($this->requireToken($userId), $deviceId);
+
+		return [
+			'id' => (string)($payload['id'] ?? $deviceId),
+			'ended' => ($payload['ended'] ?? false) === true,
+		];
+	}
+
+	/**
+	 * Identifiant de poste : espaces retirés (« 159 627 370 » → « 159627370 »),
+	 * borné comme l'API (1-64 caractères).
+	 *
+	 * @throws FlowlineApiException REASON_INVALID_FORMAT
+	 */
+	private function normalizeDeviceId(string $deviceId): string {
+		$normalized = preg_replace('/\s+/', '', $deviceId) ?? '';
+		if ($normalized === '' || strlen($normalized) > 64) {
+			throw new FlowlineApiException(FlowlineApiException::REASON_INVALID_FORMAT, 'Invalid device id');
+		}
+
+		return $normalized;
 	}
 
 	/**

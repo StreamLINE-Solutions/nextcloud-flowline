@@ -36,7 +36,7 @@ abstract class FlowlineOCSController extends OCSController {
 	/**
 	 * Réponse d'erreur OCS.
 	 *
-	 * @template S of Http::STATUS_BAD_REQUEST|Http::STATUS_UNAUTHORIZED|Http::STATUS_FORBIDDEN|Http::STATUS_NOT_FOUND|Http::STATUS_TOO_MANY_REQUESTS|Http::STATUS_BAD_GATEWAY
+	 * @template S of Http::STATUS_BAD_REQUEST|Http::STATUS_UNAUTHORIZED|Http::STATUS_FORBIDDEN|Http::STATUS_NOT_FOUND|Http::STATUS_CONFLICT|Http::STATUS_TOO_MANY_REQUESTS|Http::STATUS_BAD_GATEWAY
 	 * @param S $status
 	 * @return DataResponse<S, array{error: string, message?: string}, array{}>
 	 */

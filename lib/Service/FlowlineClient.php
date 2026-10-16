@@ -157,6 +157,7 @@ class FlowlineClient {
 
 	private function reasonForStatus(int $status): string {
 		return match ($status) {
+			400 => FlowlineApiException::REASON_INVALID_FORMAT,
 			401 => FlowlineApiException::REASON_INVALID_TOKEN,
 			403 => FlowlineApiException::REASON_FORBIDDEN,
 			404 => FlowlineApiException::REASON_NOT_FOUND,
