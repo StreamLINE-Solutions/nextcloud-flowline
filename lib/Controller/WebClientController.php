@@ -130,7 +130,7 @@ class WebClientController extends Controller {
 			'#\./assets/([A-Za-z0-9][A-Za-z0-9._-]*)#',
 			fn (array $matches): string => $this->url->linkToRoute(
 				'flowline.webclient.asset',
-				['file' => $matches[1]],
+				['file' => (string)($matches[1] ?? '')],
 			),
 			$html,
 		);
