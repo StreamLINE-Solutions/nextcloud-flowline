@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 0.6.1 — 2026-10-17
+
+### Changed
+
+- Fiche App Store : ajout de six captures d'écran dans `appinfo/info.xml` (le store n'a pas d'icône dédiée — la carte de l'app affiche sa première capture ; sans capture, un picto générique est affiché) et dossier `screenshots/` ajouté au paquet
+
 ## 0.6.0 — 2026-10-17
 
 ### Added

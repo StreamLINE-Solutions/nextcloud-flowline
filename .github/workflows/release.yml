@@ -46,6 +46,7 @@ jobs:
             --include='appinfo/***' --include='lib/***' --include='js/***' \
             --include='css/***' --include='img/***' --include='l10n/***' \
             --include='templates/***' --include='webclient/***' \
+            --include='screenshots/***' \
             --include='openapi.json' --include='LICENSE' --include='CHANGELOG.md' \
             --exclude='*' \
             ./ "build/artifacts/appstore/${APP_NAME}/"
