@@ -244,32 +244,59 @@ async function endSupportWindow(invitation: Invitation): Promise<void> {
 	}
 }
 
-function webClientUrl(deviceId: string): string {
-	return generateUrl('/apps/flowline/webclient') + '?target=' + encodeURIComponent(deviceId)
+function webClientUrl(deviceId: string, hostname = ''): string {
+	const params = new URLSearchParams({ target: deviceId })
+	if (hostname !== '') {
+		params.set('name', hostname)
+	}
+	return generateUrl('/apps/flowline/webclient') + '?' + params.toString()
+}
+
+/**
+ * Ouvre la fenêtre support : une popup dimensionnée (nommée par poste, donc
+ * réutilisée au re-clic), avec repli en onglet si la popup est bloquée. À
+ * appeler dans le geste utilisateur — un `await` avant `window.open` ferait
+ * perdre le geste et le navigateur bloquerait la popup.
+ */
+function openSupportPopup(id: string, hostname: string): Window | null {
+	const width = Math.min(1280, window.screen.availWidth)
+	const height = Math.min(800, window.screen.availHeight)
+	const left = Math.max(0, Math.round((window.screen.availWidth - width) / 2))
+	const top = Math.max(0, Math.round((window.screen.availHeight - height) / 2))
+	const features = `popup=yes,width=${width},height=${height},left=${left},top=${top}`
+	const win = window.open(webClientUrl(id, hostname), `flowline-support-${id}`, features)
+	if (win !== null) {
+		return win
+	}
+	// Popup bloquée : repli en onglet (pas de dimensionnement possible).
+	window.open(webClientUrl(id, hostname), '_blank', 'noopener')
+	return null
 }
 
 /*
- * Session navigateur : ouvre la fenêtre support (traçabilité côté API,
- * best-effort) puis la page du client web dans un nouvel onglet. La page est
- * servie par l'app avec la config WS injectée — aucun jeton ne transite.
+ * Session navigateur : la fenêtre support (popup) est ouverte immédiatement —
+ * avant tout appel réseau, pour garder le geste utilisateur — puis déclarée
+ * côté API (best-effort : la session peut démarrer sans). La page est servie
+ * par l'app avec la config WS injectée — aucun jeton ne transite.
  */
-async function openBrowserSession(deviceId: string): Promise<void> {
+function openBrowserSession(deviceId: string, hostname = ''): void {
 	const id = deviceId.replace(/\s+/g, '')
 	if (id === '') {
 		return
 	}
+	openSupportPopup(id, hostname)?.focus()
 	supportBusy.value = true
 	supportFeedback.value = null
-	try {
-		await axios.post(generateOcsUrl('apps/flowline/api/v1/invitations'), { deviceId: id })
-	} catch (e) {
-		// Non bloquant : la session navigateur peut démarrer sans fenêtre
-		// (poste lié à un compte, fenêtre déjà ouverte par un autre compte…).
-		supportFeedback.value = { type: 'warning', text: describeSupportError(e) }
-	} finally {
-		supportBusy.value = false
-	}
-	window.open(webClientUrl(id), '_blank', 'noopener')
+	axios
+		.post(generateOcsUrl('apps/flowline/api/v1/invitations'), { deviceId: id })
+		.catch((e) => {
+			// Non bloquant : la session navigateur peut démarrer sans fenêtre
+			// (poste lié à un compte, fenêtre déjà ouverte par un autre compte…).
+			supportFeedback.value = { type: 'warning', text: describeSupportError(e) }
+		})
+		.finally(() => {
+			supportBusy.value = false
+		})
 }
 
 async function copyModuleLink(): Promise<void> {
@@ -485,7 +512,7 @@ function invitationStatus(invitation: Invitation): string {
 								<span class="flowline-meta flowline-right">
 									{{ machine.online ? t('flowline', 'Online') : relative(machine.last_seen) }}
 								</span>
-								<NcButton :disabled="supportBusy" @click="openBrowserSession(String(machine.id))">
+								<NcButton :disabled="supportBusy" @click="openBrowserSession(String(machine.id), machine.hostname)">
 									{{ t('flowline', 'Browser support') }}
 								</NcButton>
 							</li>

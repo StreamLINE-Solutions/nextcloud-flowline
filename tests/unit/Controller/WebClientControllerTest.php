@@ -98,6 +98,17 @@ final class WebClientControllerTest extends TestCase {
 		$this->assertStringNotContainsString("'unsafe-eval'", $policy);
 	}
 
+	public function testFeaturePolicyAllowsFullscreenForSelf(): void {
+		$this->allowed();
+
+		$policy = $this->controller()->index()->getFeaturePolicy()->buildPolicy();
+
+		// Sans politique explicite, une `Response` brute part d'un
+		// `EmptyFeaturePolicy` (→ fullscreen 'none') : le bouton plein écran de
+		// la fenêtre de support serait bloqué par le navigateur.
+		$this->assertStringContainsString("fullscreen 'self'", $policy);
+	}
+
 	public function testServesBuiltAsset(): void {
 		$this->allowed();
 		$files = glob(__DIR__ . '/../../../webclient/assets/*.js') ?: [];

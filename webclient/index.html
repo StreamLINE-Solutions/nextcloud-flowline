@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>FlowLINE Web — spike</title>
+		<title>FlowLINE — support</title>
 		<style>
 			:root { color-scheme: dark; }
 			body {
@@ -47,34 +47,97 @@
 				padding: 10px;
 				white-space: pre-wrap;
 			}
-			canvas { background: #000; border: 1px solid #2a2a33; border-radius: 6px; max-width: 100%; }
+			canvas {
+				background: #000;
+				border: 1px solid #2a2a33;
+				border-radius: 6px;
+				display: block;
+				max-width: 100%;
+				max-height: 100%;
+			}
+
+			/* ---- mode « support » (page servie par l'app, popup) ----
+			   Masque l'interface de dev, garde une barre fine + l'écran plein cadre. */
+			body.app {
+				display: flex;
+				flex-direction: column;
+				height: 100vh;
+				overflow: hidden;
+				padding: 0;
+			}
+			body.app #spike { display: none; }
+			body:not(.app) #bar { display: none; }
+			#bar {
+				align-items: center;
+				background: #101014;
+				border-bottom: 1px solid #2a2a33;
+				display: flex;
+				flex: 0 0 auto;
+				font-size: 12px;
+				gap: 12px;
+				padding: 6px 10px;
+			}
+			#bar .state {
+				flex: 1 1 auto;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+			#bar .state.ok { color: #7fd48a; }
+			#bar .state.error { color: #ff8080; }
+			#bar .machine { color: #9a9ab0; }
+			#bar button { font-size: 12px; padding: 4px 10px; }
+			#stage {
+				flex: 1 1 auto;
+				min-height: 0;
+			}
+			body.app #stage {
+				align-items: center;
+				background: #000;
+				display: flex;
+				justify-content: center;
+			}
+			body.app canvas { border: 0; border-radius: 0; }
 		</style>
-		<script type="module" crossorigin src="./assets/index-TQ-lAvaL.js"></script>
+		<script type="module" crossorigin src="./assets/index-Ce54BMdO.js"></script>
 	</head>
 	<body>
-		<h1>FlowLINE Web — spike</h1>
-		<p class="warn">Spike : en production, la page est servie par l'app Nextcloud (WSS + session autorisée côté serveur). En dev autonome : <code>ws://</code> LAN non chiffré.</p>
-		<div class="row">
-			<label>
-				Rendez-vous (WS)
-				<input id="rdv" />
-			</label>
-			<label>
-				Poste cible (id)
-				<input id="target" placeholder="223 483 138" />
-			</label>
+		<div id="bar">
+			<span class="state" id="state">Préparation…</span>
+			<span class="machine" id="machine"></span>
+			<button id="retry" hidden>Réessayer</button>
+			<button id="fullscreen">Plein écran</button>
 		</div>
-		<div class="row">
-			<label>
-				Relais (WS — injecté par la page hôte)
-				<input id="relay" />
-			</label>
+
+		<div id="spike">
+			<h1>FlowLINE Web — spike</h1>
+			<p class="warn">Spike : en production, la page est servie par l'app Nextcloud (WSS + session autorisée côté serveur). En dev autonome : <code>ws://</code> LAN non chiffré.</p>
+			<div class="row">
+				<label>
+					Rendez-vous (WS)
+					<input id="rdv" />
+				</label>
+				<label>
+					Poste cible (id)
+					<input id="target" placeholder="223 483 138" />
+				</label>
+			</div>
+			<div class="row">
+				<label>
+					Relais (WS — injecté par la page hôte)
+					<input id="relay" />
+				</label>
+			</div>
+			<div class="row">
+				<button id="connect">Connecter</button>
+			</div>
+			<pre id="log"></pre>
+			<p class="hint">Cliquer dans l'écran pour capturer le clavier.</p>
 		</div>
-		<div class="row">
-			<button id="connect">Connecter</button>
+
+		<div id="stage">
+			<canvas id="screen" width="960" height="540" tabindex="0"></canvas>
 		</div>
-		<pre id="log"></pre>
-		<canvas id="screen" width="960" height="540" tabindex="0"></canvas>
-		<p class="hint">Cliquer dans l'écran pour capturer le clavier.</p>
+
 	</body>
 </html>

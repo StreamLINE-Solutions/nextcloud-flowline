@@ -14,6 +14,7 @@ use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\OpenAPI;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
 use OCP\AppFramework\Http\DataDisplayResponse;
+use OCP\AppFramework\Http\FeaturePolicy;
 use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
 use OCP\IURLGenerator;
@@ -74,6 +75,10 @@ class WebClientController extends Controller {
 			'Content-Type' => 'text/html; charset=utf-8',
 		]);
 		$response->setContentSecurityPolicy($this->contentSecurityPolicy($rdvUrl, $relayUrl));
+		// Une `Response` brute part d'un `EmptyFeaturePolicy` (→ fullscreen
+		// 'none') : la fenêtre de support a besoin du plein écran (bouton de la
+		// barre d'état), comme la page de la console (TemplateResponse).
+		$response->setFeaturePolicy(new FeaturePolicy());
 		$response->cacheFor(0);
 
 		return $response;

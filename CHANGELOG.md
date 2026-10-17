@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 0.6.2 — 2026-10-17
+
+### Changed
+
+- Fenêtre de support (client web) : ouverture en **popup dimensionnée** au lieu d'un onglet — auto-ajustée à la taille de l'écran distant dès la connexion (bornée à l'écran local), rendu 1:1 quand c'est possible ; interface épurée (barre d'état, bouton plein écran — plus de formulaire de développement) ; connexion automatique à l'ouverture et fenêtre réutilisée par poste (re-clic = focus)
+
 ## 0.6.1 — 2026-10-17
 
 ### Changed
