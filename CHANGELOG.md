@@ -5,7 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+<!-- ⚠ App Store Nextcloud : les sections de version doivent s'écrire « ## X.Y.Z »
+     (sans crochets) — la plateforme parse les lignes `^## (\d+\.\d+\.\d+)`. -->
+
 ## [Unreleased]
+
+## 0.5.0 — 2026-10-17
 
 ### Added
 
@@ -29,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Console : rechargement des machines et sessions à l'ouverture/fin d'une fenêtre support + auto-rafraîchissement (30 s) tant qu'une fenêtre est active (le poste apparaît dès que son module se connecte)
 - Fenêtres support : état explicite (module en ligne/hors ligne, session active ou non) au lieu de « Module not connected yet », et aide « démarrer la session depuis votre client FlowLINE »
+
+## 0.1.0 — squelette initial
 
 - Initial project skeleton based on the official Nextcloud app template
 - CI workflows: lint (PHP, info.xml, ESLint, Stylelint), Psalm matrix, Node build
