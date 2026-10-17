@@ -4,13 +4,33 @@ Bring your remote support workspace into Nextcloud: link your FlowLINE account,
 see your machines and sessions, invite a computer and receive notifications —
 without leaving your Nextcloud.
 
-> Status: **early development** — the skeleton is in place, the app is not usable yet.
+> Status: **published on the [Nextcloud app store](https://apps.nextcloud.com/apps/flowline)**
+> (0.5.0) — this repository tracks 0.6.0, which adds Nextcloud notifications.
+
+## Features
+
+- **Account linking** — paste a personal FlowLINE API token (`flapi_…`) in your
+  personal settings; it is stored encrypted (instance key) on the server and
+  never sent back to the browser.
+- **Machines** — your fleet and support machines (online/offline, OS, last
+  activity, shared fleet) in the FlowLINE console.
+- **Sessions** — active and recent support sessions, with duration.
+- **Support windows** — invite a computer by its module id, copy the module
+  link, open/close windows, and see the module status (online/offline).
+- **Browser support** — start the support session directly in the browser (no
+  software to install on the technician side), with a strict CSP; the API
+  token never reaches the browser.
+- **Notifications** — a Nextcloud notification when a support session starts or
+  ends on one of your machines (polled by a background job, ≤ 5 minutes).
+- **Translations** — English (source) and French (`l10n/`).
 
 ## Requirements
 
 - Nextcloud 33 – 36
 - PHP 8.2+
 - A FlowLINE account (https://flowline.support)
+- **Background jobs** (cron) enabled for the notifications to be polled —
+  see the [Nextcloud documentation](https://docs.nextcloud.com/server/stable/admin_manual/configuration_server/background_jobs_configuration.html)
 
 ## Development
 
@@ -86,9 +106,12 @@ Releases are signed and published to the
 client bundle (`webclient/`) is committed instead (see above) and included in
 the release tarball.
 
-Publishing is automated: publishing a GitHub release builds, packages and
-pushes the app to the store — see [`dev/README.md`](dev/README.md) for the
-workflow and the required secrets.
+Publishing is prepared by the release workflow: publishing a GitHub release
+builds the app, packages `flowline.tar.gz` and attaches it to the release. The
+store release is then submitted with the tarball URL and its SHA-512 signature
+(the workflow pushes it automatically instead when the `release` environment
+provides the `APPSTORE_TOKEN` and `APP_PRIVATE_KEY` secrets) — see
+[`dev/README.md`](dev/README.md) for the workflow and the required secrets.
 
 ## Links
 

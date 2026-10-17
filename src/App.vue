@@ -284,6 +284,17 @@ async function copyModuleLink(): Promise<void> {
 	}
 }
 
+/*
+ * Page du module support (téléchargement) fournie par `/me` — à montrer à
+ * l'utilisateur du poste à dépanner.
+ */
+function openModulePage(): void {
+	const url = account.value?.support_module_url ?? ''
+	if (url !== '') {
+		window.open(url, '_blank', 'noopener')
+	}
+}
+
 function reasonOf(e: unknown): string {
 	const data = (e as { response?: { data?: { ocs?: { data?: { error?: unknown } } } } })?.response?.data?.ocs?.data
 	return typeof data?.error === 'string' ? data.error : 'network'
@@ -533,6 +544,10 @@ function invitationStatus(invitation: Invitation): string {
 							<div class="flowline-actions">
 								<NcButton @click="copyModuleLink">
 									{{ linkCopied ? t('flowline', 'Link copied') : t('flowline', 'Copy module link') }}
+								</NcButton>
+								<NcButton :disabled="account.support_module_url === ''"
+									@click="openModulePage">
+									{{ t('flowline', 'Open module page') }}
 								</NcButton>
 								<NcTextField v-model="supportDeviceId"
 									class="flowline-device-field"

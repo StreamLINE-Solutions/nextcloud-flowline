@@ -2764,6 +2764,10 @@
         {
             "name": "sessions",
             "description": "Sessions du compte FlowLINE lié, pour la console."
+        },
+        {
+            "name": "web_client",
+            "description": "Page « assistance navigateur » : sert le client web FlowLINE (bundle construit dans `webclient/`) avec la configuration WS injectée. Sécurité : le jeton `flapi_` n'est jamais transmis au navigateur — la page ne parle qu'aux endpoints WebSocket publics, et l'autorisation (fenêtre support) est ouverte côté serveur par la console (API v1). La CSP est restreinte à `self` + les origines WS configurées. L'id cible (`?target=…`) est lu par le client web lui-même (jamais injecté dans le HTML). Le bundle est servi par ce contrôleur (page + assets) : les fichiers statiques d'une app ne sont pas accessibles via `/apps/<id>/…` quand l'app est installée dans `custom_apps/` (instance de dev) — les routes, elles, fonctionnent partout."
         }
     ]
 }

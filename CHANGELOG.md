@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Notifications Nextcloud : une session de support démarrée ou terminée sur une machine du compte lié produit une notification (sonde au tick du cron Nextcloud, ≤ 5 minutes ; l'historique antérieur à la liaison n'est pas notifié)
 - Le compte lié (jeton chiffré et curseur d'événements) est supprimé quand l'utilisateur Nextcloud est supprimé
+- Bouton « Ouvrir la page du module » dans la section Support (page de téléchargement du module support, fournie par le compte FlowLINE)
+- Traductions françaises de l'interface (console, réglages personnels et admin, notifications) — fichiers `l10n/fr.json` et `l10n/fr.js`
 
 ## 0.5.0 — 2026-10-17
 
