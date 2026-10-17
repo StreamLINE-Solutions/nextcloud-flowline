@@ -33,4 +33,16 @@ class AccountMapper extends QBMapper {
 			return null;
 		}
 	}
+
+	/**
+	 * Tous les comptes liés (job de notifications).
+	 *
+	 * @return Account[]
+	 */
+	public function findAllAccounts(): array {
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('*')->from($this->getTableName());
+
+		return $this->findEntities($qb);
+	}
 }

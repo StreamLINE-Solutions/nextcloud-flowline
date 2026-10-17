@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 0.6.0 — 2026-10-17
+
+### Added
+
+- Notifications Nextcloud : une session de support démarrée ou terminée sur une machine du compte lié produit une notification (sonde au tick du cron Nextcloud, ≤ 5 minutes ; l'historique antérieur à la liaison n'est pas notifié)
+- Le compte lié (jeton chiffré et curseur d'événements) est supprimé quand l'utilisateur Nextcloud est supprimé
+
 ## 0.5.0 — 2026-10-17
 
 ### Added
