@@ -113,6 +113,14 @@ class FlowlineClient {
 	 * @throws FlowlineApiException
 	 */
 	private function request(string $method, string $path, string $token, array $options = []): array {
+		// T13 : revalider l'URL à chaque requête (un enregistrement DNS peut
+		// changer entre le réglage admin et l'appel — rebinding).
+		try {
+			$this->config->assertApiUrlSafe();
+		} catch (\InvalidArgumentException $e) {
+			$this->logger->warning('FlowLINE API URL refused: ' . $e->getMessage(), ['app' => Application::APP_ID]);
+			throw new FlowlineApiException(FlowlineApiException::REASON_NETWORK, 'FlowLINE API URL not allowed');
+		}
 		$url = $this->config->getApiUrl() . '/api/v1' . $path;
 		$client = $this->clientService->newClient();
 
@@ -123,6 +131,9 @@ class FlowlineClient {
 		$options['timeout'] = self::TIMEOUT;
 		$options['connect_timeout'] = self::CONNECT_TIMEOUT;
 		$options['http_errors'] = false;
+		// Pas de redirection : une 30x pourrait viser 169.254.169.254 et
+		// contourner la validation de l'URL configurée.
+		$options['allow_redirects'] = false;
 
 		try {
 			$response = match ($method) {

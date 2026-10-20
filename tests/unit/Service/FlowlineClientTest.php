@@ -135,4 +135,36 @@ final class FlowlineClientTest extends TestCase {
 
 		$this->assertTrue($result['window']);
 	}
+
+	public function testRequestsDisableRedirects(): void {
+		$this->http->expects($this->once())->method('get')
+			->with(
+				'https://api.example.test/api/v1/me',
+				$this->callback(static fn (array $options): bool => ($options['allow_redirects'] ?? null) === false),
+			)
+			->willReturn($this->response(200, '{"username":"lus"}'));
+
+		$this->flowline->me('flapi_x');
+	}
+
+	public function testRefusedUrlMapsToNetworkError(): void {
+		$config = $this->createMock(ConfigService::class);
+		$config->method('getApiUrl')->willReturn('https://api.example.test');
+		$config->method('assertApiUrlSafe')
+			->willThrowException(new \InvalidArgumentException('API URL host not allowed'));
+
+		$client = new FlowlineClient(
+			$this->clientService,
+			$config,
+			$this->createMock(LoggerInterface::class),
+		);
+
+		try {
+			$client->me('flapi_x');
+			$this->fail('Expected FlowlineApiException');
+		} catch (FlowlineApiException $e) {
+			$this->assertSame(FlowlineApiException::REASON_NETWORK, $e->getReason());
+			$this->assertSame('FlowLINE API URL not allowed', $e->getMessage());
+		}
+	}
 }

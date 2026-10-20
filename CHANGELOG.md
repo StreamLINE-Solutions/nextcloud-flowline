@@ -10,6 +10,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 0.6.3 — 2026-10-20
+
+### Security
+
+- Réglage de l'URL de l'API : refus des cibles loopback, link-local et réservées
+  (métadonnées cloud `169.254.169.254`, `localhost`, CGNAT) ; les plages privées LAN
+  restent autorisées pour une API auto-hébergée. Les redirections HTTP sont désactivées
+  côté client d'API (contournement par `30x`).
+
+### Changed
+
+- `axios` 1.20.0 et `follow-redirects` 1.16.1 : plus aucun avis de sécurité en
+  production (`npm audit --omit=dev` = 0).
+
 ## 0.6.2 — 2026-10-17
 
 ### Changed

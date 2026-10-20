@@ -58,7 +58,77 @@ class ConfigService {
 		if (preg_match('#^https?://[^\s]+$#i', $url) !== 1) {
 			throw new \InvalidArgumentException('Invalid API URL: ' . $url);
 		}
+		$this->assertApiUrlSafe($url);
 		$this->appConfig->setValueString(Application::APP_ID, self::KEY_API_URL, $url);
+	}
+
+	/**
+	 * Refuse les cibles loopback, link-local et réservées (SSRF, T13 0.6.3).
+	 *
+	 * Les plages privées RFC1918 et ULA restent autorisées : une API
+	 * auto-hébergée sur le LAN est un cas d'usage légitime. La résolution DNS
+	 * est refaite à chaque requête par FlowlineClient (défense contre le
+	 * rebinding), donc cette méthode est aussi publique.
+	 *
+	 * @throws \InvalidArgumentException hôte interdit
+	 */
+	public function assertApiUrlSafe(?string $url = null): void {
+		$url ??= $this->getApiUrl();
+		$host = parse_url($url, PHP_URL_HOST);
+		if (!is_string($host) || $host === '') {
+			throw new \InvalidArgumentException('Invalid API URL: ' . $url);
+		}
+		if (parse_url($url, PHP_URL_USER) !== null) {
+			throw new \InvalidArgumentException('API URL must not contain credentials');
+		}
+		$host = trim($host, '[]');
+		$lower = strtolower($host);
+		if ($lower === 'localhost' || str_ends_with($lower, '.localhost')
+			|| in_array($lower, ['metadata.google.internal', 'metadata.goog', 'instance-data'], true)) {
+			throw new \InvalidArgumentException('API URL host not allowed: ' . $host);
+		}
+		if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
+			$this->assertPublicIp($host);
+			return;
+		}
+		$records = @dns_get_record($host, DNS_A | DNS_AAAA);
+		if ($records === false) {
+			// DNS indisponible : ne pas bloquer l'enregistrement (l'appel
+			// échouera de toute façon côté requête).
+			return;
+		}
+		foreach ($records as $record) {
+			$ip = $record['ip'] ?? $record['ipv6'] ?? '';
+			if (is_string($ip) && $ip !== '') {
+				$this->assertPublicIp($ip);
+			}
+		}
+	}
+
+	/**
+	 * @throws \InvalidArgumentException IP loopback/link-local/réservée
+	 */
+	private function assertPublicIp(string $ip): void {
+		// IPv4 mappée en IPv6 (::ffff:169.254.169.254) : vérifier la partie v4.
+		if (str_starts_with(strtolower($ip), '::ffff:')) {
+			$v4 = substr($ip, 7);
+			if (filter_var($v4, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false) {
+				$this->assertPublicIp($v4);
+				return;
+			}
+		}
+		// NO_RES_RANGE rejette loopback, link-local, 0.0.0.0/8, multicast,
+		// 169.254/16, ::1, fe80::/10… ; NO_PRIV_RANGE n'est PAS utilisé
+		// (RFC1918/ULA autorisés pour une API auto-hébergée).
+		if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_RES_RANGE) === false) {
+			throw new \InvalidArgumentException('API URL host not allowed: ' . $ip);
+		}
+		// CGNAT 100.64.0.0/10 : non couvert par NO_RES_RANGE, utilisé par
+		// certains endpoints de métadonnées cloud (Alibaba 100.100.100.200).
+		$long = ip2long($ip);
+		if ($long !== false && $long >= ip2long('100.64.0.0') && $long <= ip2long('100.127.255.255')) {
+			throw new \InvalidArgumentException('API URL host not allowed: ' . $ip);
+		}
 	}
 
 	public function isEnabled(): bool {
