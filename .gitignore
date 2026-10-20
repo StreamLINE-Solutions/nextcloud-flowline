@@ -10,3 +10,20 @@
 /node_modules/
 /js/
 /css/
+
+# Secrets et fichiers sensibles
+.env*
+secrets/
+99-sensitive/
+*.key
+*.pem
+*.p12
+*.pfx
+*.kdbx
+id_rsa*
+id_ed25519*
+*.log
+*.sql
+*.dump
+*.bak
+*.bak-*
