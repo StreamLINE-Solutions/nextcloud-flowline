@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 0.6.4 — 2026-10-20
+
+### Changed
+
+- Réglages admin : champs d'URL plus larges et non préremplis avec les valeurs par défaut.
+  Les URLs par défaut ne sont plus affichées dans le formulaire ; laisser vide utilise le
+  service FlowLINE par défaut. La page personnelle continue d'afficher l'URL effective.
+
 ## 0.6.3 — 2026-10-20
 
 ### Security

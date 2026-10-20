@@ -23,28 +23,28 @@ $status = (string)$_['status'];
 
 		<p>
 			<label for="flowline-api-url"><?php p($l->t('FlowLINE API URL')); ?></label><br>
-			<input type="text" id="flowline-api-url" name="apiUrl" value="<?php p((string)$_['apiUrl']); ?>" placeholder="<?php p((string)$_['defaultApiUrl']); ?>">
+			<input type="text" class="input-text" style="width: 100%; max-width: 40rem;" id="flowline-api-url" name="apiUrl" value="<?php p((string)$_['apiUrl']); ?>" placeholder="https://api.example.com">
 			<br>
-			<span class="settings-hint"><?php p($l->t('Default: %s — change only for a self-hosted FlowLINE API.', [(string)$_['defaultApiUrl']])); ?></span>
+			<span class="settings-hint"><?php p($l->t('Leave empty to use the default FlowLINE API.')); ?></span>
 		</p>
 
 		<p>
 			<label for="flowline-web-rdv-url"><?php p($l->t('Web client — rendezvous WebSocket URL')); ?></label><br>
-			<input type="text" id="flowline-web-rdv-url" name="webRdvUrl" value="<?php p((string)$_['webRdvUrl']); ?>" placeholder="<?php p((string)$_['defaultWebRdvUrl']); ?>">
+			<input type="text" class="input-text" style="width: 100%; max-width: 40rem;" id="flowline-web-rdv-url" name="webRdvUrl" value="<?php p((string)$_['webRdvUrl']); ?>" placeholder="wss://ws.example.com/ws/id">
 			<br>
-			<span class="settings-hint"><?php p($l->t('Default: %s — ws:// or wss:// URL used by the browser support page.', [(string)$_['defaultWebRdvUrl']])); ?></span>
+			<span class="settings-hint"><?php p($l->t('Leave empty to use the default rendezvous WebSocket.')); ?></span>
 		</p>
 
 		<p>
 			<label for="flowline-web-relay-url"><?php p($l->t('Web client — relay WebSocket URL')); ?></label><br>
-			<input type="text" id="flowline-web-relay-url" name="webRelayUrl" value="<?php p((string)$_['webRelayUrl']); ?>" placeholder="<?php p((string)$_['defaultWebRelayUrl']); ?>">
+			<input type="text" class="input-text" style="width: 100%; max-width: 40rem;" id="flowline-web-relay-url" name="webRelayUrl" value="<?php p((string)$_['webRelayUrl']); ?>" placeholder="wss://ws.example.com/ws/relay">
 			<br>
-			<span class="settings-hint"><?php p($l->t('Default: %s — used when the support session goes through the relay.', [(string)$_['defaultWebRelayUrl']])); ?></span>
+			<span class="settings-hint"><?php p($l->t('Leave empty to use the default relay WebSocket.')); ?></span>
 		</p>
 
 		<p>
 			<label for="flowline-groups"><?php p($l->t('Restrict to groups (none selected = all users)')); ?></label><br>
-			<select id="flowline-groups" name="groups[]" multiple size="6">
+			<select id="flowline-groups" name="groups[]" multiple size="6" style="width: 100%; max-width: 20rem;">
 				<?php foreach ($_['groups'] as $group): ?>
 					<option value="<?php p((string)$group['id']); ?>" <?php if (in_array($group['id'], $_['restrictedGroups'], true)) {
 						p('selected');

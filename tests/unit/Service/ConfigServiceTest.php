@@ -69,4 +69,16 @@ final class ConfigServiceTest extends TestCase {
 			->with(Application::APP_ID, 'api_url', ConfigService::DEFAULT_API_URL);
 		$this->config->setApiUrl('');
 	}
+
+	public function testConfiguredUrlsAreEmptyWhenUnset(): void {
+		$this->appConfig->method('getValueString')->willReturn('');
+		$this->assertSame('', $this->config->getConfiguredApiUrl());
+		$this->assertSame('', $this->config->getConfiguredWebclientRdvUrl());
+		$this->assertSame('', $this->config->getConfiguredWebclientRelayUrl());
+	}
+
+	public function testConfiguredApiUrlKeepsCustomValue(): void {
+		$this->appConfig->method('getValueString')->willReturn('https://api.example.test/');
+		$this->assertSame('https://api.example.test', $this->config->getConfiguredApiUrl());
+	}
 }

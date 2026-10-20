@@ -39,12 +39,9 @@ class Admin implements ISettings {
 		$status = (string)$this->request->getParam('flowline', '');
 
 		return new TemplateResponse(Application::APP_ID, 'settings/admin', [
-			'apiUrl' => $this->config->getApiUrl(),
-			'defaultApiUrl' => ConfigService::DEFAULT_API_URL,
-			'webRdvUrl' => $this->config->getWebclientRdvUrl(),
-			'defaultWebRdvUrl' => ConfigService::DEFAULT_WEB_RDV_URL,
-			'webRelayUrl' => $this->config->getWebclientRelayUrl(),
-			'defaultWebRelayUrl' => ConfigService::DEFAULT_WEB_RELAY_URL,
+			'apiUrl' => $this->config->getConfiguredApiUrl(),
+			'webRdvUrl' => $this->config->getConfiguredWebclientRdvUrl(),
+			'webRelayUrl' => $this->config->getConfiguredWebclientRelayUrl(),
 			'enabled' => $this->config->isEnabled(),
 			'restrictedGroups' => $this->config->getRestrictedGroups(),
 			'groups' => $groups,

@@ -48,6 +48,22 @@ class ConfigService {
 	}
 
 	/**
+	 * Valeur réellement configurée (vide si l'admin n'a rien surchargé).
+	 * Utilisée par le formulaire : les défauts ne sont plus préremplis.
+	 */
+	public function getConfiguredApiUrl(): string {
+		return rtrim(trim($this->appConfig->getValueString(Application::APP_ID, self::KEY_API_URL, '')), '/');
+	}
+
+	public function getConfiguredWebclientRdvUrl(): string {
+		return rtrim(trim($this->appConfig->getValueString(Application::APP_ID, self::KEY_WEB_RDV_URL, '')), '/');
+	}
+
+	public function getConfiguredWebclientRelayUrl(): string {
+		return rtrim(trim($this->appConfig->getValueString(Application::APP_ID, self::KEY_WEB_RELAY_URL, '')), '/');
+	}
+
+	/**
 	 * @throws \InvalidArgumentException URL invalide
 	 */
 	public function setApiUrl(string $url): void {
