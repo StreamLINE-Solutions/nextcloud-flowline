@@ -23,21 +23,21 @@ $status = (string)$_['status'];
 
 		<p>
 			<label for="flowline-api-url"><?php p($l->t('FlowLINE API URL')); ?></label><br>
-			<input type="text" class="input-text" style="width: 100%; max-width: 40rem;" id="flowline-api-url" name="apiUrl" value="<?php p((string)$_['apiUrl']); ?>" placeholder="https://api.example.com">
+			<input type="text" class="input-text" style="width: 100%; max-width: 40rem;" id="flowline-api-url" name="apiUrl" value="<?php p((string)$_['apiUrl']); ?>">
 			<br>
 			<span class="settings-hint"><?php p($l->t('Leave empty to use the default FlowLINE API.')); ?></span>
 		</p>
 
 		<p>
 			<label for="flowline-web-rdv-url"><?php p($l->t('Web client — rendezvous WebSocket URL')); ?></label><br>
-			<input type="text" class="input-text" style="width: 100%; max-width: 40rem;" id="flowline-web-rdv-url" name="webRdvUrl" value="<?php p((string)$_['webRdvUrl']); ?>" placeholder="wss://ws.example.com/ws/id">
+			<input type="text" class="input-text" style="width: 100%; max-width: 40rem;" id="flowline-web-rdv-url" name="webRdvUrl" value="<?php p((string)$_['webRdvUrl']); ?>">
 			<br>
 			<span class="settings-hint"><?php p($l->t('Leave empty to use the default rendezvous WebSocket.')); ?></span>
 		</p>
 
 		<p>
 			<label for="flowline-web-relay-url"><?php p($l->t('Web client — relay WebSocket URL')); ?></label><br>
-			<input type="text" class="input-text" style="width: 100%; max-width: 40rem;" id="flowline-web-relay-url" name="webRelayUrl" value="<?php p((string)$_['webRelayUrl']); ?>" placeholder="wss://ws.example.com/ws/relay">
+			<input type="text" class="input-text" style="width: 100%; max-width: 40rem;" id="flowline-web-relay-url" name="webRelayUrl" value="<?php p((string)$_['webRelayUrl']); ?>">
 			<br>
 			<span class="settings-hint"><?php p($l->t('Leave empty to use the default relay WebSocket.')); ?></span>
 		</p>

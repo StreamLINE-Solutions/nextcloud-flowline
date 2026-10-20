@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 0.6.5 — 2026-10-20
+
+### Changed
+
+- Réglages admin : champs d'URL vides par défaut, sans placeholder ni URL en dur ;
+  la capture de la fiche store est mise à jour.
+
 ## 0.6.4 — 2026-10-20
 
 ### Changed
